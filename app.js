@@ -1,5 +1,8 @@
 var express = require("express");
 var app = express();
+var server = app.listen(8080, function() {
+    console.log('Ready on port %d', server.address().port);
+});
 
 // "/" => "Hi there!"
 app.get("/", function(req, res) {
