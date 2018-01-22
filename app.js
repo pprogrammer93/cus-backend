@@ -1,6 +1,26 @@
 var express = require("express");
 var app = express();
 
+app.use(express.static("public"));
+
+app.get("/", (req, res) => {
+	res.render("home.ejs");
+});
+
+app.get("/fallinlovewith/:thing", (req, res) => {
+	var thing = req.params.thing;
+	res.render("love.ejs", {thing: thing});
+})
+
+app.get("/post", (req, res) => {
+	var posts = [
+		{title: "Post 1", author: "A"},
+		{title: "Post 2", author: "B"},
+		{title: "Post 3", author: "C"}
+	]
+	res.render("post.ejs", {posts: posts});
+})
+
 // "/" => "Hi there!"
 app.get("/", function(req, res) {
 	res.send("Hi there!");
@@ -40,6 +60,6 @@ app.get("*", function(req, res) {
 	res.send("ERROR BRO!");
 })
 
-app.listen(3000, function(){
-	console.log("Server has started!")
+app.listen(3000, () => {
+	console.log("Server On!");
 });
