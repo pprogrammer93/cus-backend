@@ -1,5 +1,22 @@
 var express = require("express");
+var mysql = require("mysql");
+var fs = require("fs");
 var app = express();
+
+var host.dat = fs.readFileSync('host', 'utf8').split(",");
+if(host[1] == 0) {
+	host[1] = "";
+}
+
+var con = mysql.createConnection({
+	host: "localhost",
+	user: host[0],
+	password: host[1]
+});
+con.connect(function(err) {
+	if(err) throw err;
+	console.log("Connected!");
+});
 
 app.use(express.static("public"));
 
