@@ -3,7 +3,7 @@ var mysql = require("mysql");
 var fs = require("fs");
 var app = express();
 
-var host.dat = fs.readFileSync('host', 'utf8').split(",");
+var host = fs.readFileSync('host.dat', 'utf8').split(",");
 if(host[1] == 0) {
 	host[1] = "";
 }
@@ -13,15 +13,17 @@ var con = mysql.createConnection({
 	user: host[0],
 	password: host[1]
 });
+var connect_msg = "Error!"
 con.connect(function(err) {
 	if(err) throw err;
-	console.log("Connected!");
+	connect_msg = "Connected!"
 });
 
 app.use(express.static("public"));
 
 app.get("/", (req, res) => {
-	res.render("home.ejs");
+	//res.render("home.ejs");
+	res.send(connect_msg);
 });
 
 app.get("/fallinlovewith/:thing", (req, res) => {
@@ -39,7 +41,7 @@ app.get("/post", (req, res) => {
 })
 
 // "/" => "Hi there!"
-app.get("/", function(req, res) {
+app.get("/hi", function(req, res) {
 	res.send("Hi there!");
 })
 
