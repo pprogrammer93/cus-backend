@@ -4,14 +4,14 @@ var fs = require("fs");
 var app = express();
 
 var host = fs.readFileSync('host.dat', 'utf8').split(",");
-if(host[1] == 0) {
-	host[1] = "";
+if(host[2] == 0) {
+	host[2] = "";
 }
 
 var con = mysql.createConnection({
-	host: "localhost",
-	user: host[0],
-	password: host[1]
+	host: host[0],
+	user: host[1],
+	password: host[2]
 });
 var connect_msg = "Error!"
 con.connect(function(err) {
