@@ -4,30 +4,31 @@ var hash = require("password-hash");
 var app = express();
 var bodyParser = require("body-parser");
 
-const MYSQL_HOST = 0;
-const MYSQL_USER = 1;
-const MYSQL_PASS = 2;
-const MYSQL_PORT = 3;
-const MYSQL_DB = 4;
+const HOST_HOST = 0;
+const HOST_USER = 1;
+const HOST_PASS = 2;
+const HOST_PORT = 3;
+const HOST_DB = 4;
+const HOST_DOMAIN = 5;
 
 app.use(bodyParser.urlencoded({
 	extended: true
 }));
 
 var host = fs.readFileSync('host.dat', 'utf8').split(",");
-if(host[MYSQL_PASS] == 0) {
-	host[MYSQL_PASS] = "";
+if(host[HOST_PASS] == 0) {
+	host[HOST_PASS] = "";
 }
-if(host[MYSQL_PORT] == 0) {
-	host[MYSQL_PORT] = null;
+if(host[HOST_PORT] == 0) {
+	host[HOST_PORT] = null;
 }
 var mysql = require("mysql");
 var con = mysql.createConnection({
-	host: host[MYSQL_HOST],
-	user: host[MYSQL_USER],
-	password: host[MYSQL_PASS],
-	port: host[MYSQL_PORT],
-	database: host[MYSQL_DB]
+	host: host[HOST_HOST],
+	user: host[HOST_USER],
+	password: host[HOST_PASS],
+	port: host[HOST_PORT],
+	database: host[HOST_DB]
 });
 var connect_msg = "Error!"
 con.connect(function(err) {
@@ -35,6 +36,9 @@ con.connect(function(err) {
 		connect_msg = "Connected!";
 	} else {
 		connect_msg = connect_msg + " " + err.code;
+		for(i = 0; i < host[HOST_DB].length; ++i) {
+			connect_msg += " " + host[HOST_DB].charCodeAt(i);
+		}
 	}
 });
 app.get("/", (req, res) => {
@@ -45,7 +49,7 @@ app.listen(3000, () => {
 });
 
 app.get("/register", (req, res) => {
-	res.render("register.ejs");
+	res.render("register.ejs", {domain: host[HOST_DOMAIN]});
 });
 
 app.post("/create-account", (req, res) => {
