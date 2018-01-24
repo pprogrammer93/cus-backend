@@ -11,6 +11,7 @@ const HOST_PORT = 3;
 const HOST_DB = 4;
 const HOST_DOMAIN = 5;
 
+app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({
 	extended: true
 }));
