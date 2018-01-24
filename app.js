@@ -1,11 +1,18 @@
 var express = require("express");
 var fs = require("fs");
+var hash = require("password-hash");
 var app = express();
+var bodyParser = require("body-parser");
 
 const MYSQL_HOST = 0;
 const MYSQL_USER = 1;
 const MYSQL_PASS = 2;
 const MYSQL_PORT = 3;
+const MYSQL_DB = 4;
+
+app.use(bodyParser.urlencoded({
+	extended: true
+}));
 
 var host = fs.readFileSync('host.dat', 'utf8').split(",");
 if(host[MYSQL_PASS] == 0) {
@@ -19,12 +26,15 @@ var con = mysql.createConnection({
 	host: host[MYSQL_HOST],
 	user: host[MYSQL_USER],
 	password: host[MYSQL_PASS],
-	port: host[MYSQL_PORT]
+	port: host[MYSQL_PORT],
+	database: host[MYSQL_DB]
 });
 var connect_msg = "Error!"
 con.connect(function(err) {
 	if(!err) {
 		connect_msg = "Connected!";
+	} else {
+		connect_msg = connect_msg + " " + err.code;
 	}
 });
 app.get("/", (req, res) => {
@@ -33,6 +43,56 @@ app.get("/", (req, res) => {
 app.listen(3000, () => {
 	console.log("Server On!");
 });
+
+app.get("/register", (req, res) => {
+	res.render("register.ejs");
+});
+
+app.post("/create-account", (req, res) => {
+	if(req.body.name && req.body.email && req.body.phone && req.body.password_1 && req.body.password_2) {
+		if(req.body.password_1 == req.body.password_2) {
+			var passHash = hash.generate(req.body.password_1, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
+			var name = "'" + req.body.name + "'";
+			var email = "'" + req.body.email + "'";
+			var phone = "'" + req.body.phone + "'";
+			var password = "'" + passHash + "'";
+			var sql = "INSERT INTO cus_user (name, email, phone, password) VALUES (" + name + "," + email + "," + phone + "," + password + ")";
+			
+			con.query(sql, (err, result) => {
+				if(!err) {
+					res.send({'error': false, 'msg': 'ok'});
+					console.log(passHash);
+				} else {
+					res.send({'error': true, 'msg': err.code});
+				}
+			});
+		} else {
+			res.send({'error': true, 'msg': 'password mismatch'});
+		}
+	} else {
+		res.send({'error': true, 'msg': 'lack of parameter'});
+	}
+});
+
+app.post("/verification", (req, res) => {
+	if(req.body.email && req.body.password) {
+		var sql = "SELECT password FROM cus_user WHERE email=" + "'" + req.body.email + "'";
+
+		con.query(sql, (err, result) => {
+			if(!err) {
+				if(hash.verify(req.body.password, result[0].password)) {
+					res.send({'error': false, "msg": 'verification success'});
+				} else {
+					res.send({'error': true, "msg": 'wrong password'});
+				}
+			} else {
+				res.send({'error': true, 'msg': err.code});
+			}
+		});
+	} else {
+		res.send({'error': true, 'msg': 'lack of parameter'});
+	}
+})
 
 /*
 app.use(express.static("public"));

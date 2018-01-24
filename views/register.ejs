@@ -1,0 +1,36 @@
+<html>
+	<head>
+		<style>
+			.label-input {
+				width: 150px; 
+				display: inline-block;
+			}
+		</style>
+	</head>
+	<body>
+		<form method="POST" action="http://localhost:3000/create-account">
+			<div>
+				<div>
+					<label class="label-input" for="name">Name</label>
+					<input id="name" name="name" type="text" required />
+				</div>
+				<div>
+					<label class="label-input" for="email">Email</label>
+					<input id="email" name="email" type="email" required />
+				</div>
+				<div>
+					<label class="label-input" for="phone">Phone</label>
+					<input id="phone" name="phone" type="text" required/>
+				</div>
+				<div>
+					<label class="label-input" for="password_1">Password</label>
+					<input id="password_1" name="password_1" type="password" required/>
+				</div>
+				<div>
+					<label class="label-input" for="password_2">Re-type Password</label>
+					<input id="password_2" name="password_2" type="password" required/>
+				</div>
+			<button type="submit">Submit</button>
+		</form>
+	</body>
+</html>
