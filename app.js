@@ -52,6 +52,7 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/create-account", (req, res) => {
+	logging("data sent: " + JSON.stringify(req.body) + "\n");
 	if(req.headers.authorization == host[HOST_KEY]) {
 		if(req.body.name && req.body.email && req.body.phone && req.body.password_1 && req.body.password_2) {
 			var select = "SELECT email FROM cus_user WHERE email=" + "'" + req.body.email + "'";
@@ -107,6 +108,7 @@ app.post("/create-account", (req, res) => {
 });
 
 app.post("/verify", (req, res) => {
+	logging("data sent: " + JSON.stringify(req.body) + "\n");
 	if(req.headers.authorization == host[HOST_KEY]) {
 		if(req.body.email && req.body.password) {
 			var sql = "SELECT id, name, phone, password FROM cus_user WHERE email=" + "'" + req.body.email + "'";
@@ -142,6 +144,12 @@ app.post("/verify", (req, res) => {
 		res.send({error: {msg: 'unauthorized'}, result: {}});
 	}
 })
+
+function logging(message) {
+	fs.appendFile('log.dat', message, function (err) {
+	  if (err) throw err;
+	});
+}
 
 /*
 app.use(express.static("public"));
