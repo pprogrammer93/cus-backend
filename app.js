@@ -76,7 +76,7 @@ app.post("/create-account", (req, res) => {
 									if(!err) {
 										res.send(
 											{
-												error: {}, 
+												error: null, 
 												result: {
 													id: result[0].id, 
 													name: req.body.name, 
@@ -90,21 +90,21 @@ app.post("/create-account", (req, res) => {
 								});
 								
 							} else {
-								res.send({error: {msg: 'failed to store data'}, result: {}});
+								res.send({error: {msg: 'failed to store data'}, result: null});
 							}
 						});
 					} else {
-						res.send({error: {msg: 'password mismatch'}, result: {}});
+						res.send({error: {msg: 'password mismatch'}, result: null});
 					}
 				} else {
-					res.send({error: {msg: 'failed: email has been exist'}, result: {}});
+					res.send({error: {msg: 'failed: email has been exist'}, result: null});
 				}
 			});
 		} else {
-			res.send({error: {msg: 'lack of parameter'}, result: {}});
+			res.send({error: {msg: 'lack of parameter'}, result: null});
 		}
 	} else {
-		res.send({error: {msg: 'unauthorized'}, result: {}});
+		res.send({error: {msg: 'unauthorized'}, result: null});
 	}
 });
 
@@ -120,7 +120,7 @@ app.post("/verify", (req, res) => {
 						if(hash.verify(req.body.password, result[0].password)) {
 							res.send(
 								{
-									error: {}, 
+									error: null, 
 									result: {
 										id: result[0].id, 
 										name: result[0].name, 
@@ -129,20 +129,20 @@ app.post("/verify", (req, res) => {
 									}
 								});
 						} else {
-							res.send({error: {msg: 'wrong password'}, result: {}});
+							res.send({error: {msg: 'wrong password'}, result: null});
 						}
 					} else {
-						res.send({error: {msg: 'user does not exist'}, result: {}});
+						res.send({error: {msg: 'user does not exist'}, result: null});
 					}
 				} else {
-					res.send({error: {msg: 'failed to verify data'}, result: {}});
+					res.send({error: {msg: 'failed to verify data'}, result: null});
 				}
 			});
 		} else {
-			res.send({error: {msg: 'lack of parameter'}, result: {}});
+			res.send({error: {msg: 'lack of parameter'}, result: null});
 		}
 	} else {
-		res.send({error: {msg: 'unauthorized'}, result: {}});
+		res.send({error: {msg: 'unauthorized'}, result: null});
 	}
 })
 
