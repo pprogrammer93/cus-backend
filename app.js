@@ -10,6 +10,7 @@ const HOST_PASS = 2;
 const HOST_PORT = 3;
 const HOST_DB = 4;
 const HOST_DOMAIN = 5;
+const HOST_KEY = 6;
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({
@@ -31,15 +32,12 @@ var con = mysql.createConnection({
 	port: host[HOST_PORT],
 	database: host[HOST_DB]
 });
-var connect_msg = "Error!"
+var connect_msg = ""
 con.connect(function(err) {
 	if(!err) {
-		connect_msg = "Connected!";
+		connect_msg = "Hi there!";
 	} else {
-		connect_msg = connect_msg + " " + err.code;
-		for(i = 0; i < host[HOST_DB].length; ++i) {
-			connect_msg += " " + host[HOST_DB].charCodeAt(i);
-		}
+		connect_msg = "Opps! " + err.code;
 	}
 });
 app.get("/", (req, res) => {
@@ -54,48 +52,67 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/create-account", (req, res) => {
-	if(req.body.name && req.body.email && req.body.phone && req.body.password_1 && req.body.password_2) {
-		if(req.body.password_1 == req.body.password_2) {
-			var passHash = hash.generate(req.body.password_1, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
-			var name = "'" + req.body.name + "'";
-			var email = "'" + req.body.email + "'";
-			var phone = "'" + req.body.phone + "'";
-			var password = "'" + passHash + "'";
-			var sql = "INSERT INTO cus_user (name, email, phone, password) VALUES (" + name + "," + email + "," + phone + "," + password + ")";
-			
-			con.query(sql, (err, result) => {
-				if(!err) {
-					res.send({'error': false, 'msg': 'ok'});
-					console.log(passHash);
+	if(req.headers.authorization == host[HOST_KEY]) {
+		if(req.body.name && req.body.email && req.body.phone && req.body.password_1 && req.body.password_2) {
+			var select = "SELECT email FROM cus_user WHERE email=" + "'" + req.body.email + "'";
+
+			con.query(select, (err, result) => {
+				if(result.length == 0) {
+					if(req.body.password_1 == req.body.password_2) {
+						var passHash = hash.generate(req.body.password_1, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
+						var name = "'" + req.body.name + "'";
+						var email = "'" + req.body.email + "'";
+						var phone = "'" + req.body.phone + "'";
+						var password = "'" + passHash + "'";
+						var sql = "INSERT INTO cus_user (name, email, phone, password) VALUES (" + name + "," + email + "," + phone + "," + password + ")";
+						
+						con.query(sql, (err, result) => {
+							if(!err) {
+								res.send({'error': false, 'msg': 'ok'});
+							} else {
+								res.send({'error': true, 'msg': 'failed to store data'});
+							}
+						});
+					} else {
+						res.send({'error': true, 'msg': 'password mismatch'});
+					}
 				} else {
-					res.send({'error': true, 'msg': err.code});
+					res.send({'error': true, 'msg': 'failed: email has been exist'});
 				}
 			});
 		} else {
-			res.send({'error': true, 'msg': 'password mismatch'});
+			res.send({'error': true, 'msg': 'lack of parameter'});
 		}
 	} else {
-		res.send({'error': true, 'msg': 'lack of parameter'});
+		res.send({'error': true, 'msg': 'unauthorized'});
 	}
 });
 
-app.post("/verification", (req, res) => {
-	if(req.body.email && req.body.password) {
-		var sql = "SELECT password FROM cus_user WHERE email=" + "'" + req.body.email + "'";
+app.post("/verify", (req, res) => {
+	if(req.headers.authorization == host[HOST_KEY]) {
+		if(req.body.email && req.body.password) {
+			var sql = "SELECT id, name, phone, password FROM cus_user WHERE email=" + "'" + req.body.email + "'";
 
-		con.query(sql, (err, result) => {
-			if(!err) {
-				if(hash.verify(req.body.password, result[0].password)) {
-					res.send({'error': false, "msg": 'verification success'});
+			con.query(sql, (err, result) => {
+				if(!err) {
+					if(result.length != 0) {
+						if(hash.verify(req.body.password, result[0].password)) {
+							res.send({'error': false, "msg": 'verification success'});
+						} else {
+							res.send({'error': true, "msg": 'wrong password'});
+						}
+					} else {
+						res.send({'error': true, "msg": 'user does not exist'});
+					}
 				} else {
-					res.send({'error': true, "msg": 'wrong password'});
+					res.send({'error': true, 'msg': 'failed to verify data'});
 				}
-			} else {
-				res.send({'error': true, 'msg': err.code});
-			}
-		});
+			});
+		} else {
+			res.send({'error': true, 'msg': 'lack of parameter'});
+		}
 	} else {
-		res.send({'error': true, 'msg': 'lack of parameter'});
+		res.send({'error': true, 'msg': 'unauthorized'});
 	}
 })
 
