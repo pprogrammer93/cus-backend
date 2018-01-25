@@ -52,7 +52,7 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/create-account", (req, res) => {
-	logging("data sent: " + JSON.stringify(req.body) + "\n");
+	logging("data sent: body{" + JSON.stringify(req.body) + ", " + "header{" + JSON.stringify(req.headers) + "\n");
 	if(req.headers.authorization == host[HOST_KEY]) {
 		if(req.body.name && req.body.email && req.body.phone && req.body.password_1 && req.body.password_2) {
 			var select = "SELECT email FROM cus_user WHERE email=" + "'" + req.body.email + "'";
@@ -108,7 +108,7 @@ app.post("/create-account", (req, res) => {
 });
 
 app.post("/verify", (req, res) => {
-	logging("data sent: " + JSON.stringify(req.body) + "\n");
+	logging("data sent: body{" + JSON.stringify(req.body) + ", " + "header{" + JSON.stringify(req.headers) + "\n");
 	if(req.headers.authorization == host[HOST_KEY]) {
 		if(req.body.email && req.body.password) {
 			var sql = "SELECT id, name, phone, password FROM cus_user WHERE email=" + "'" + req.body.email + "'";
