@@ -68,23 +68,41 @@ app.post("/create-account", (req, res) => {
 						
 						con.query(sql, (err, result) => {
 							if(!err) {
-								res.send({'error': false, 'msg': 'ok'});
+								sql = "SELECT id FROM cus_user WHERE email=" + "'" + req.body.email + "'";
+
+								con.query(sql, (err, result) => {
+									if(!err) {
+										res.send(
+											{
+												error: {}, 
+												result: {
+													id: result[0].id, 
+													name: req.body.name, 
+													email: req.body.email, 
+													phone: req.body.phone
+												}
+											});
+									} else {
+
+									}
+								});
+								
 							} else {
-								res.send({'error': true, 'msg': 'failed to store data'});
+								res.send({error: {msg: 'failed to store data'}, result: {}});
 							}
 						});
 					} else {
-						res.send({'error': true, 'msg': 'password mismatch'});
+						res.send({error: {msg: 'password mismatch'}, result: {}});
 					}
 				} else {
-					res.send({'error': true, 'msg': 'failed: email has been exist'});
+					res.send({error: {msg: 'failed: email has been exist'}, result: {}});
 				}
 			});
 		} else {
-			res.send({'error': true, 'msg': 'lack of parameter'});
+			res.send({error: {msg: 'lack of parameter'}, result: {}});
 		}
 	} else {
-		res.send({'error': true, 'msg': 'unauthorized'});
+		res.send({error: {msg: 'unauthorized'}, result: {}});
 	}
 });
 
@@ -97,22 +115,31 @@ app.post("/verify", (req, res) => {
 				if(!err) {
 					if(result.length != 0) {
 						if(hash.verify(req.body.password, result[0].password)) {
-							res.send({'error': false, "msg": 'verification success'});
+							res.send(
+								{
+									error: {}, 
+									result: {
+										id: result[0].id, 
+										name: result[0].name, 
+										email: req.body.email, 
+										phone: result[0].phone
+									}
+								});
 						} else {
-							res.send({'error': true, "msg": 'wrong password'});
+							res.send({error: {msg: 'wrong password'}, result: {}});
 						}
 					} else {
-						res.send({'error': true, "msg": 'user does not exist'});
+						res.send({error: {msg: 'user does not exist'}, result: {}});
 					}
 				} else {
-					res.send({'error': true, 'msg': 'failed to verify data'});
+					res.send({error: {msg: 'failed to verify data'}, result: {}});
 				}
 			});
 		} else {
-			res.send({'error': true, 'msg': 'lack of parameter'});
+			res.send({error: {msg: 'lack of parameter'}, result: {}});
 		}
 	} else {
-		res.send({'error': true, 'msg': 'unauthorized'});
+		res.send({error: {msg: 'unauthorized'}, result: {}});
 	}
 })
 
