@@ -13,6 +13,7 @@ const HOST_DOMAIN = 5;
 const HOST_KEY = 6;
 
 app.set("view engine", "ejs");
+app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
 	extended: true
 }));
