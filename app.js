@@ -144,7 +144,45 @@ app.post("/verify", (req, res) => {
 	} else {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 	}
-})
+});
+
+app.post("/place", (req, res) => {
+	logging("data sent: body{" + JSON.stringify(req.body) + ", " + "header{" + JSON.stringify(req.headers) + "\n");
+	if(req.headers.authorization == host[HOST_KEY]) {
+		if(req.body.category && req.body.latitude && req.body.longitude) {
+			if(!req.body.low_rad) {
+				low_rad = 0;
+			} else {
+				low_rad = req.body.low_rad;
+			}
+			if(!req.body.high_rad) {
+				high_rad = 1000;
+			} else {
+				high_rad = req.body.high_rad;
+			}
+
+			var sql = "SELECT id FROM `cus_toko` WHERE SQRT((latitude-" + req.body.longitude + ")*(latitude-" + req.body.latitude + ")+" + 
+				"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.latitude + "))" + 
+				" BETWEEN " + low_rad + " AND " + high_rad +
+				" ORDER BY SQRT((latitude-" + req.body.longitude + ")*(latitude-" + req.body.latitude + ")+" + 
+				"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.latitude + ")) ASC";
+
+			con.query(sql, (err, result) => {
+				if(!err) {
+					res.send({error: null, result});
+				} else {
+					res.send({error: {msg: 'failed to acquire data'}, result: null});
+				}
+			});
+
+		} else {
+			res.send({error: {msg: 'lack of parameter'}, result: null});
+		}
+	} else {
+		res.send({error: {msg: 'unauthorized'}, result: null});
+	}
+
+});
 
 function logging(message) {
 	fs.appendFile('log.dat', message, function (err) {
@@ -154,33 +192,6 @@ function logging(message) {
 
 /*
 app.use(express.static("public"));
-
-app.get("/fallinlovewith/:thing", (req, res) => {
-	var thing = req.params.thing;
-	res.render("love.ejs", {thing: thing});
-})
-
-app.get("/post", (req, res) => {
-	var posts = [
-		{title: "Post 1", author: "A"},
-		{title: "Post 2", author: "B"},
-		{title: "Post 3", author: "C"}
-	]
-	res.render("post.ejs", {posts: posts});
-})
-
-// "/" => "Hi there!"
-app.get("/hi", function(req, res) {
-	res.send("Hi there!");
-})
-
-app.get("/bye", function(req, res) {
-	res.send("Good bye!");
-})
-
-app.get("/dog", function(req, res) {
-	res.send("MEOW!");
-})
 
 app.get("/output/:title/:name/:id", function(req, res) {
 	res.send(req.params.title + " " + req.params.name + " " + req.params.id);
