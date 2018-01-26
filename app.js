@@ -161,7 +161,8 @@ app.post("/place", (req, res) => {
 				high_rad = req.body.high_rad;
 			}
 
-			var sql = "SELECT id FROM `cus_toko` WHERE SQRT((latitude-" + req.body.longitude + ")*(latitude-" + req.body.latitude + ")+" + 
+			var sql = "SELECT id, name, address, description, open_at, close_at, latitude, longitude, phone FROM `cus_toko` WHERE SQRT(" + 
+				"(latitude-" + req.body.longitude + ")*(latitude-" + req.body.latitude + ")+" + 
 				"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.latitude + "))" + 
 				" BETWEEN " + low_rad + " AND " + high_rad +
 				" ORDER BY SQRT((latitude-" + req.body.longitude + ")*(latitude-" + req.body.latitude + ")+" + 
