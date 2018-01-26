@@ -65,7 +65,7 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/create-account", (req, res) => {
-	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}\n");
+	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
@@ -127,7 +127,7 @@ app.post("/create-account", (req, res) => {
 });
 
 app.post("/verify", (req, res) => {
-	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}\n");
+	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(req.headers.authorization != host[HOST_KEY]) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
@@ -148,7 +148,7 @@ app.post("/verify", (req, res) => {
 			res.send({error: {msg: 'user does not exist'}, result: null});
 			return;
 		}
-		if(!hash.verify(req.body.password, reult_1[0].password)) {
+		if(!hash.verify(req.body.password, result_1[0].password)) {
 			res.send({error: {msg: 'wrong password'}, result: null});
 			return;
 		}
@@ -176,7 +176,7 @@ app.post("/verify", (req, res) => {
 });
 
 app.post("/place", (req, res) => {
-	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}\n");
+	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(req.headers.authorization == host[HOST_KEY]) {
 		if(req.body.category && req.body.latitude && req.body.longitude) {
 			if(!req.body.low_rad) {
@@ -216,7 +216,7 @@ app.post("/place", (req, res) => {
 });
 
 function logging(message) {
-	fs.appendFile('log.dat', message, function (err) {
+	fs.appendFile('log.dat', message+"\n", function (err) {
 	  if (err) throw err;
 	});
 }
