@@ -12,6 +12,8 @@
     "body-parser": "^1.18.2",
     "ejs": "^2.5.7",
     "express": "^4.16.2",
+    "express-mysql-session": "^1.2.3",
+    "express-session": "^1.15.6",
     "mysql": "^2.15.0",
     "password-hash": "^1.2.2"
   }

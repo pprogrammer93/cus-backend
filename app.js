@@ -3,6 +3,8 @@ var fs = require("fs");
 var hash = require("password-hash");
 var app = express();
 var bodyParser = require("body-parser");
+var session = require('express-session');
+var MySQLStore = require('express-mysql-session');
 
 const HOST_HOST = 0;
 const HOST_USER = 1;
@@ -11,12 +13,6 @@ const HOST_PORT = 3;
 const HOST_DB = 4;
 const HOST_DOMAIN = 5;
 const HOST_KEY = 6;
-
-app.set("view engine", "ejs");
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-	extended: true
-}));
 
 var host = fs.readFileSync('host.dat', 'utf8').split(",");
 if(host[HOST_PASS] == 0) {
@@ -44,17 +40,33 @@ con.connect(function(err) {
 app.get("/", (req, res) => {
 	res.send(connect_msg);
 });
+var sessionStore = new MySQLStore({}, con);
+
+app.set("view engine", "ejs");
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+	extended: true
+}));
+app.use(session({
+	key: 'session_authorized',
+	secret: 'authorized',
+	store: sessionStore,
+	resave: false,
+	saveUninitialized: false
+}));
+
 app.listen(3000, () => {
 	console.log("Server On!");
 });
 
 app.get("/register", (req, res) => {
+	req.session.authorized = true;
 	res.render("register.ejs", {domain: host[HOST_DOMAIN]});
 });
 
 app.post("/create-account", (req, res) => {
-	logging("data sent: body{" + JSON.stringify(req.body) + ", " + "header{" + JSON.stringify(req.headers) + "\n");
-	if(!req.headers.authorization == host[HOST_KEY]) {
+	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}\n");
+	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
@@ -67,12 +79,12 @@ app.post("/create-account", (req, res) => {
 
 	user_id = 0;
 	con.query(select, (err, result) => {
-		if(result.length == 0) {
+		if(result.length != 0) {
 			res.send({error: {msg: 'failed: email has been exist'}, result: null});
-			logging("sql error: " + err.code);
+			logging("sql error: try to register existed email");
 			return;
 		}
-		if(req.body.password_1 == req.body.password_2) {
+		if(req.body.password_1 != req.body.password_2) {
 			res.send({error: {msg: 'password mismatch'}, result: null});
 			return;
 		}
@@ -115,7 +127,7 @@ app.post("/create-account", (req, res) => {
 });
 
 app.post("/verify", (req, res) => {
-	logging("data sent: body{" + JSON.stringify(req.body) + ", " + "header{" + JSON.stringify(req.headers) + "\n");
+	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}\n");
 	if(req.headers.authorization != host[HOST_KEY]) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
@@ -125,7 +137,7 @@ app.post("/verify", (req, res) => {
 		return;
 	}
 
-	var sql = "SELECT id, name, phone, password FROM cus_user WHERE email=" + "'" + req.body.email + "'";
+	var sql = "SELECT id, name, phone, password sFROM cus_user WHERE email=" + "'" + req.body.email + "'";
 	con.query(sql, (err, result_1) => {
 		if(err) {
 			res.send({error: {msg: 'failed to verify data'}, result: null});
@@ -136,7 +148,7 @@ app.post("/verify", (req, res) => {
 			res.send({error: {msg: 'user does not exist'}, result: null});
 			return;
 		}
-		if(!hash.verify(req.body.password, result_1[0].password)) {
+		if(!hash.verify(req.body.password, reult_1[0].password)) {
 			res.send({error: {msg: 'wrong password'}, result: null});
 			return;
 		}
@@ -164,7 +176,7 @@ app.post("/verify", (req, res) => {
 });
 
 app.post("/place", (req, res) => {
-	logging("data sent: body{" + JSON.stringify(req.body) + ", " + "header{" + JSON.stringify(req.headers) + "\n");
+	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}\n");
 	if(req.headers.authorization == host[HOST_KEY]) {
 		if(req.body.category && req.body.latitude && req.body.longitude) {
 			if(!req.body.low_rad) {
