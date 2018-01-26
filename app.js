@@ -54,96 +54,113 @@ app.get("/register", (req, res) => {
 
 app.post("/create-account", (req, res) => {
 	logging("data sent: body{" + JSON.stringify(req.body) + ", " + "header{" + JSON.stringify(req.headers) + "\n");
-	if(req.headers.authorization == host[HOST_KEY]) {
-		if(req.body.name && req.body.email && req.body.phone && req.body.password_1 && req.body.password_2) {
-			var select = "SELECT email FROM cus_user WHERE email=" + "'" + req.body.email + "'";
-
-			con.query(select, (err, result) => {
-				if(result.length == 0) {
-					if(req.body.password_1 == req.body.password_2) {
-						var passHash = hash.generate(req.body.password_1, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
-						var name = "'" + req.body.name + "'";
-						var email = "'" + req.body.email + "'";
-						var phone = "'" + req.body.phone + "'";
-						var password = "'" + passHash + "'";
-						var sql = "INSERT INTO cus_user (name, email, phone, password) VALUES (" + name + "," + email + "," + phone + "," + password + ")";
-						
-						con.query(sql, (err, result) => {
-							if(!err) {
-								sql = "SELECT id FROM cus_user WHERE email=" + "'" + req.body.email + "'";
-
-								con.query(sql, (err, result) => {
-									if(!err) {
-										res.send(
-											{
-												error: null, 
-												result: {
-													id: result[0].id, 
-													name: req.body.name, 
-													email: req.body.email, 
-													phone: req.body.phone
-												}
-											});
-									} else {
-
-									}
-								});
-								
-							} else {
-								res.send({error: {msg: 'failed to store data'}, result: null});
-							}
-						});
-					} else {
-						res.send({error: {msg: 'password mismatch'}, result: null});
-					}
-				} else {
-					res.send({error: {msg: 'failed: email has been exist'}, result: null});
-				}
-			});
-		} else {
-			res.send({error: {msg: 'lack of parameter'}, result: null});
-		}
-	} else {
+	if(!req.headers.authorization == host[HOST_KEY]) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
+		return;
 	}
+	if(!(req.body.name && req.body.email && req.body.phone && req.body.password_1 && req.body.password_2)) {
+		res.send({error: {msg: 'lack of parameter'}, result: null});
+		return;
+	}
+
+	var select = "SELECT email FROM cus_user WHERE email=" + "'" + req.body.email + "'";
+
+	user_id = 0;
+	con.query(select, (err, result) => {
+		if(result.length == 0) {
+			res.send({error: {msg: 'failed: email has been exist'}, result: null});
+			logging("sql error: " + err.code);
+			return;
+		}
+		if(req.body.password_1 == req.body.password_2) {
+			res.send({error: {msg: 'password mismatch'}, result: null});
+			return;
+		}
+
+		var passHash = hash.generate(req.body.password_1, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
+		var name = "'" + req.body.name + "'";
+		var email = "'" + req.body.email + "'";
+		var phone = "'" + req.body.phone + "'";
+		var password = "'" + passHash + "'";
+		var sql = "INSERT INTO cus_user (name, email, phone, password) VALUES (" + name + "," + email + "," + phone + "," + password + ")";
+		
+		con.query(sql, (err, result) => {
+			if(err) {
+				res.send({error: {msg: 'failed to store data'}, result: null});
+				logging("sql error: " + err.code);
+				return;
+			}
+			sql = "SELECT id FROM cus_user WHERE email=" + "'" + req.body.email + "'";
+
+			con.query(sql, (err, result) => {
+				if(err) {
+					res.send({error: {msg: 'failed to store data'}, result: null});
+					logging("sql error: " + err.code);
+					return;
+				}
+				user_id = result[0].id;
+				res.send(
+					{
+						error: null, 
+						result: {
+							id: result[0].id, 
+							name: req.body.name, 
+							email: req.body.email, 
+							phone: req.body.phone
+						}
+					});
+			});
+		});
+	});
 });
 
 app.post("/verify", (req, res) => {
 	logging("data sent: body{" + JSON.stringify(req.body) + ", " + "header{" + JSON.stringify(req.headers) + "\n");
-	if(req.headers.authorization == host[HOST_KEY]) {
-		if(req.body.email && req.body.password) {
-			var sql = "SELECT id, name, phone, password FROM cus_user WHERE email=" + "'" + req.body.email + "'";
-
-			con.query(sql, (err, result) => {
-				if(!err) {
-					if(result.length != 0) {
-						if(hash.verify(req.body.password, result[0].password)) {
-							res.send(
-								{
-									error: null, 
-									result: {
-										id: result[0].id, 
-										name: result[0].name, 
-										email: req.body.email, 
-										phone: result[0].phone
-									}
-								});
-						} else {
-							res.send({error: {msg: 'wrong password'}, result: null});
-						}
-					} else {
-						res.send({error: {msg: 'user does not exist'}, result: null});
-					}
-				} else {
-					res.send({error: {msg: 'failed to verify data'}, result: null});
-				}
-			});
-		} else {
-			res.send({error: {msg: 'lack of parameter'}, result: null});
-		}
-	} else {
+	if(req.headers.authorization != host[HOST_KEY]) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
+		return;
 	}
+	if(!(req.body.email && req.body.password)) {
+		res.send({error: {msg: 'lack of parameter'}, result: null});
+		return;
+	}
+
+	var sql = "SELECT id, name, phone, password FROM cus_user WHERE email=" + "'" + req.body.email + "'";
+	con.query(sql, (err, result_1) => {
+		if(err) {
+			res.send({error: {msg: 'failed to verify data'}, result: null});
+			logging("sql error: " + err.code);
+			return;
+		}
+		if(result_1.length == 0) {
+			res.send({error: {msg: 'user does not exist'}, result: null});
+			return;
+		}
+		if(!hash.verify(req.body.password, result_1[0].password)) {
+			res.send({error: {msg: 'wrong password'}, result: null});
+			return;
+		}
+
+		var sql = "SELECT item_id FROM cus_favourite WHERE user_id =" + "'" + result_1[0].id + "'";
+		con.query(sql, (err, result_2) => {
+			if(err) {
+				res.send({error: {msg: 'failed to verify data'}, result: null});
+				logging("sql error: " + err.code);
+				return;
+			}
+			res.send(
+				{
+					error: null, 
+					result: {
+						id: result_1[0].id, 
+						name: result_1[0].name, 
+						email: req.body.email, 
+						phone: result_1[0].phone,
+						item_id: result_2
+					}
+				});
+		});
+	});
 });
 
 app.post("/place", (req, res) => {
@@ -161,7 +178,7 @@ app.post("/place", (req, res) => {
 				high_rad = req.body.high_rad;
 			}
 
-			var sql = "SELECT id, name, address, description, open_at, close_at, latitude, longitude, phone FROM `cus_toko` WHERE SQRT(" + 
+			var sql = "SELECT id, name, img_url, address, description, open_at, close_at, latitude, longitude, phone FROM `cus_toko` WHERE SQRT(" + 
 				"(latitude-" + req.body.longitude + ")*(latitude-" + req.body.latitude + ")+" + 
 				"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.latitude + "))" + 
 				" BETWEEN " + low_rad + " AND " + high_rad +
@@ -173,6 +190,7 @@ app.post("/place", (req, res) => {
 					res.send({error: null, result});
 				} else {
 					res.send({error: {msg: 'failed to acquire data'}, result: null});
+					logging("sql error: " + err.code);
 				}
 			});
 
