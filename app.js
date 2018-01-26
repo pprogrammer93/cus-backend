@@ -168,7 +168,7 @@ app.post("/verify", (req, res) => {
 						name: result_1[0].name, 
 						email: req.body.email, 
 						phone: result_1[0].phone,
-						item_id: result_2
+						favourite: result_2
 					}
 				});
 		});
