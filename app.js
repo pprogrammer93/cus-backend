@@ -137,7 +137,7 @@ app.post("/verify", (req, res) => {
 		return;
 	}
 
-	var sql = "SELECT id, name, phone, password sFROM cus_user WHERE email=" + "'" + req.body.email + "'";
+	var sql = "SELECT id, name, phone, password FROM cus_user WHERE email=" + "'" + req.body.email + "'";
 	con.query(sql, (err, result_1) => {
 		if(err) {
 			res.send({error: {msg: 'failed to verify data'}, result: null});
