@@ -236,7 +236,7 @@ app.post("/getItemList", (req, res) => {
 	});
 });
 
-app.post("/favItem", (req, res) => {
+app.post("/toggleFavItem", (req, res) => {
 	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(req.headers.authorization != host[HOST_KEY]) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
@@ -247,17 +247,44 @@ app.post("/favItem", (req, res) => {
 		return;
 	}
 
-	var sql = "SELECT email FROM `cus_user` WHERE id=" + req.body.user_id;
-	console.log(sql);
+	var sql = "SELECT id FROM `cus_user` WHERE id=" + req.body.user_id;
 	con.query(sql, (err, result) => {
 		if(!err) {
-			var insert = "INSERT INTO cus_favourite (user_id, item_id) VALUES (" + req.body.user_id + "," + req.body.item_id + ")";
-			con.query(insert, (err, result) => {
+			var check = "SELECT id FROM `cus_favourite` WHERE user_id='" + req.body.user_id + 
+				"' AND item_id='" + req.body.item_id + "'";
+			con.query(check, (err, result) => {
 				if(!err) {
-					res.send({error: null, result});
+					if(result.length == 0) {
+						var insert = "INSERT INTO cus_favourite (user_id, item_id) VALUES (" + req.body.user_id + "," + req.body.item_id + ")";
+						con.query(insert, (err, result) => {
+							if(!err) {
+								res.send({error: null, result: {
+									code: 1,
+									msg: "toggle-favourited"
+								}});
+							} else {
+								res.send({error: {msg: 'failed to insert data'}, result: null});
+								logging("SQL_ERR/favItem-insert: " + err.code);
+							}
+						});
+					} else {
+						var del = "DELETE FROM `cus_favourite` WHERE user_id='" + req.body.user_id + 
+							"' AND item_id='" + req.body.item_id + "'";
+						con.query(del, (err, result) => {
+							if(!err) {
+								res.send({error: null, result: {
+									code: 0,
+									msg: "toggle-unfavourited"
+								}});
+							} else {
+								res.send({error: {msg: 'failed to delete data'}, result: null});
+								logging("SQL_ERR/favItem-delete: " + err.code);
+							}
+						});
+					}
 				} else {
-					res.send({error: {msg: 'failed to insert data'}, result: null});
-					logging("SQL_ERR/favItem-insert: " + err.code);
+					res.send({error: {msg: 'failed to fetch data'}, result: null});
+					logging("SQL_ERR/favItem-fetch: " + err.code);
 				}
 			});
 		} else {
