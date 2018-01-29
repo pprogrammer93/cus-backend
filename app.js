@@ -81,7 +81,7 @@ app.post("/create-account", (req, res) => {
 	con.query(select, (err, result) => {
 		if(result.length != 0) {
 			res.send({error: {msg: 'failed: email has been exist'}, result: null});
-			logging("sql error: try to register existed email");
+			logging("SQL_ERR: try to register existed email");
 			return;
 		}
 		if(req.body.password_1 != req.body.password_2) {
@@ -99,7 +99,7 @@ app.post("/create-account", (req, res) => {
 		con.query(sql, (err, result) => {
 			if(err) {
 				res.send({error: {msg: 'failed to store data'}, result: null});
-				logging("sql error: " + err.code);
+				logging("SQL_ERR/create_account-validate: " + err.code);
 				return;
 			}
 			sql = "SELECT id FROM cus_user WHERE email=" + "'" + req.body.email + "'";
@@ -107,7 +107,7 @@ app.post("/create-account", (req, res) => {
 			con.query(sql, (err, result) => {
 				if(err) {
 					res.send({error: {msg: 'failed to store data'}, result: null});
-					logging("sql error: " + err.code);
+					logging("SQL_ERR/create_account-store: " + err.code);
 					return;
 				}
 				user_id = result[0].id;
@@ -141,7 +141,7 @@ app.post("/verify", (req, res) => {
 	con.query(sql, (err, result_1) => {
 		if(err) {
 			res.send({error: {msg: 'failed to verify data'}, result: null});
-			logging("sql error: " + err.code);
+			logging("SQL_ERR/verify-user: " + err.code);
 			return;
 		}
 		if(result_1.length == 0) {
@@ -157,7 +157,7 @@ app.post("/verify", (req, res) => {
 		con.query(sql, (err, result_2) => {
 			if(err) {
 				res.send({error: {msg: 'failed to verify data'}, result: null});
-				logging("sql error: " + err.code);
+				logging("SQL_ERR/verify-favourite: " + err.code);
 				return;
 			}
 			res.send(
@@ -208,7 +208,7 @@ app.post("/place", (req, res) => {
 			res.send({error: null, result});
 		} else {
 			res.send({error: {msg: 'failed to acquire data'}, result: null});
-			logging("sql error: " + err.code);
+			logging("SQL_ERR/place: " + err.code);
 		}
 	});
 });
@@ -231,7 +231,7 @@ app.post("/item", (req, res) => {
 			res.send({error: null, result});
 		} else {
 			res.send({error: {msg: 'failed to acquire data'}, result: null});
-			logging("sql error: " + err.code);
+			logging("SQL_ERR/item: " + err.code);
 		}
 	});
 });
