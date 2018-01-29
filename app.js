@@ -59,9 +59,9 @@ app.listen(3000, () => {
 	console.log("Server On!");
 });
 
-app.get("/register", (req, res) => {
+app.get("/register-user", (req, res) => {
 	req.session.authorized = true;
-	res.render("register.ejs", {domain: host[HOST_DOMAIN]});
+	res.render("register-user.ejs", {domain: host[HOST_DOMAIN]});
 });
 
 app.post("/create-account", (req, res) => {
