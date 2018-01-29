@@ -65,7 +65,7 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/create-account", (req, res) => {
-	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	logging("REQUEST/create-account: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
@@ -127,7 +127,7 @@ app.post("/create-account", (req, res) => {
 });
 
 app.post("/verify", (req, res) => {
-	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	logging("REQUEST/verify: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(req.headers.authorization != host[HOST_KEY]) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
@@ -176,7 +176,7 @@ app.post("/verify", (req, res) => {
 });
 
 app.post("/place", (req, res) => {
-	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	logging("REQUEST/place: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(req.headers.authorization != host[HOST_KEY]) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
@@ -214,7 +214,7 @@ app.post("/place", (req, res) => {
 });
 
 app.post("/getItemList", (req, res) => {
-	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	logging("REQUEST/getItemList: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(req.headers.authorization != host[HOST_KEY]) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
@@ -237,7 +237,7 @@ app.post("/getItemList", (req, res) => {
 });
 
 app.post("/toggleFavItem", (req, res) => {
-	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	logging("REQUEST/toggleFavItem: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(req.headers.authorization != host[HOST_KEY]) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
