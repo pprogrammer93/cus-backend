@@ -213,6 +213,29 @@ app.post("/place", (req, res) => {
 	});
 });
 
+app.post("/item", (req, res) => {
+	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	if(req.headers.authorization != host[HOST_KEY]) {
+		res.send({error: {msg: 'unauthorized'}, result: null});
+		return;
+	}
+	if(!(req.body.toko_id)) {
+		res.send({error: {msg: 'lack of parameter'}, result: null});
+		return;
+	}
+
+	var sql = "SELECT id, name, price, img_url, description FROM `cus_item` WHERE " + 
+		"toko_id='" + req.body.toko_id + "'";
+	con.query(sql, (err, result) => {
+		if(!err) {
+			res.send({error: null, result});
+		} else {
+			res.send({error: {msg: 'failed to acquire data'}, result: null});
+			logging("sql error: " + err.code);
+		}
+	});
+});
+
 function logging(message) {
 	fs.appendFile('log.dat', message+"\n", function (err) {
 	  if (err) throw err;
