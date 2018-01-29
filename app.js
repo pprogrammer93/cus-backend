@@ -177,42 +177,40 @@ app.post("/verify", (req, res) => {
 
 app.post("/place", (req, res) => {
 	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization == host[HOST_KEY]) {
-		if(req.body.category && req.body.latitude && req.body.longitude) {
-			if(!req.body.low_rad) {
-				low_rad = 0;
-			} else {
-				low_rad = req.body.low_rad;
-			}
-			if(!req.body.high_rad) {
-				high_rad = 1000;
-			} else {
-				high_rad = req.body.high_rad;
-			}
-
-			var sql = "SELECT id, name, img_url, address, description, open_at, close_at, latitude, longitude, phone FROM `cus_toko` WHERE SQRT(" + 
-				"(latitude-" + req.body.longitude + ")*(latitude-" + req.body.latitude + ")+" + 
-				"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.latitude + "))" + 
-				" BETWEEN " + low_rad + " AND " + high_rad +
-				" ORDER BY SQRT((latitude-" + req.body.longitude + ")*(latitude-" + req.body.latitude + ")+" + 
-				"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.latitude + ")) ASC";
-
-			con.query(sql, (err, result) => {
-				if(!err) {
-					res.send({error: null, result});
-				} else {
-					res.send({error: {msg: 'failed to acquire data'}, result: null});
-					logging("sql error: " + err.code);
-				}
-			});
-
-		} else {
-			res.send({error: {msg: 'lack of parameter'}, result: null});
-		}
-	} else {
+	if(req.headers.authorization != host[HOST_KEY]) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
+		return;
+	}
+	if(!(req.body.category && req.body.latitude && req.body.longitude)) {
+		res.send({error: {msg: 'lack of parameter'}, result: null});
+		return;
 	}
 
+	if(!req.body.low_rad) {
+		low_rad = 0;
+	} else {
+		low_rad = req.body.low_rad;
+	}
+	if(!req.body.high_rad) {
+		high_rad = 1000;
+	} else {
+		high_rad = req.body.high_rad;
+	}
+	var sql = "SELECT id, name, img_url, address, description, open_at, close_at, latitude, longitude, phone FROM `cus_toko` WHERE SQRT(" + 
+		"(latitude-" + req.body.longitude + ")*(latitude-" + req.body.latitude + ")+" + 
+		"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.latitude + "))" + 
+		" BETWEEN " + low_rad + " AND " + high_rad +
+		" ORDER BY SQRT((latitude-" + req.body.longitude + ")*(latitude-" + req.body.latitude + ")+" + 
+		"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.latitude + ")) ASC";
+
+	con.query(sql, (err, result) => {
+		if(!err) {
+			res.send({error: null, result});
+		} else {
+			res.send({error: {msg: 'failed to acquire data'}, result: null});
+			logging("sql error: " + err.code);
+		}
+	});
 });
 
 function logging(message) {
