@@ -213,7 +213,7 @@ app.post("/place", (req, res) => {
 	});
 });
 
-app.post("/item", (req, res) => {
+app.post("/getItemList", (req, res) => {
 	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(req.headers.authorization != host[HOST_KEY]) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
@@ -232,6 +232,37 @@ app.post("/item", (req, res) => {
 		} else {
 			res.send({error: {msg: 'failed to acquire data'}, result: null});
 			logging("SQL_ERR/item: " + err.code);
+		}
+	});
+});
+
+app.post("/favItem", (req, res) => {
+	logging("data sent: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	if(req.headers.authorization != host[HOST_KEY]) {
+		res.send({error: {msg: 'unauthorized'}, result: null});
+		return;
+	}
+	if(!(req.body.user_id && req.body.item_id)) {
+		res.send({error: {msg: 'lack of parameter'}, result: null});
+		return;
+	}
+
+	var sql = "SELECT email FROM `cus_user` WHERE id=" + req.body.user_id;
+	console.log(sql);
+	con.query(sql, (err, result) => {
+		if(!err) {
+			var insert = "INSERT INTO cus_favourite (user_id, item_id) VALUES (" + req.body.user_id + "," + req.body.item_id + ")";
+			con.query(insert, (err, result) => {
+				if(!err) {
+					res.send({error: null, result});
+				} else {
+					res.send({error: {msg: 'failed to insert data'}, result: null});
+					logging("SQL_ERR/favItem-insert: " + err.code);
+				}
+			});
+		} else {
+			res.send({error: {msg: 'failed to validate data'}, result: null});
+			logging("SQL_ERR/favItem-validate: " + err.code);
 		}
 	});
 });
