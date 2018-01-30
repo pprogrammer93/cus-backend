@@ -69,6 +69,49 @@ app.get("/register-user", (req, res) => {
 	res.render("register-user.ejs", {domain: host[HOST_DOMAIN]});
 });
 
+app.get("/register-item", (req, res) => {
+	req.session.authorized = true;
+	res.render("register-item-noid.ejs", {domain: host[HOST_DOMAIN]});
+});
+
+app.get("/register-item/:id", (req, res) => {
+	req.session.authorized = true;
+	res.render("register-item.ejs", {domain: host[HOST_MAIN]});
+});
+
+app.post("/create-item", (req, res) => {
+	logging("REQUEST/create-item: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
+		res.send({error: {msg: 'unauthorized'}, result: null});
+		return;
+	}
+	if(!(req.body.toko_id && req.body.name && req.body.price)) {
+		res.send({error: {msg: 'lack of parameter'}, result: null});
+		return;
+	}
+
+	var description = "-";
+	if(req.body.description) {
+		description = req.body.description;
+	}
+	var hrTime = process.hrtime();
+	var img_id = hrTime[0].toString() + hrTime[1].toString();
+	var img_url = "http://" + host[HOST_DOMAIN] + "/img/item/" + req.body.toko_id + "/" + img_id + "_" + req.body.name;
+
+	var insert = "INSERT INTO cus_item (toko_id, name, price, description, img_url) " + 
+		"VALUES ('" + req.body.toko_id + "','" + req.body.name + "','" + req.body.price + "','" + description +
+		"','" + img_url + "')";
+
+	con.query(insert, (err, result) => {
+		if(err) {
+			res.send({error: {msg: 'failed to store data'}, result: null});
+			logging("SQL_ERR/create_item-insert: " + err.code);
+			return;
+		}
+		res.send({error: null, result: null});
+	});
+});
+
 app.post("/create-toko", (req, res) => {
 	logging("REQUEST/create-toko: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
