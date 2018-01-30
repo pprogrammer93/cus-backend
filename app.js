@@ -59,9 +59,30 @@ app.listen(3000, () => {
 	console.log("Server On!");
 });
 
+app.get("/register-toko", (req, res) => {
+	req.session.authorized = true;
+	res.render("register-toko.ejs", {domain: host[HOST_DOMAIN]});
+});
+
 app.get("/register-user", (req, res) => {
 	req.session.authorized = true;
 	res.render("register-user.ejs", {domain: host[HOST_DOMAIN]});
+});
+
+app.post("/create-toko", (req, res) => {
+	logging("REQUEST/create-toko: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
+		res.send({error: {msg: 'unauthorized'}, result: null});
+		return;
+	}
+	if(!(req.body.name && req.body.address && req.body.open_at && 
+			req.body.close_at && req.body.latitude && req.body.longitude && 
+			req.body.phone)) {
+		res.send({error: {msg: 'lack of parameter'}, result: null});
+		return;
+	}
+
+
 });
 
 app.post("/create-account", (req, res) => {
@@ -118,7 +139,8 @@ app.post("/create-account", (req, res) => {
 							id: result[0].id, 
 							name: req.body.name, 
 							email: req.body.email, 
-							phone: req.body.phone
+							phone: req.body.phone,
+							favourite: []
 						}
 					});
 			});
@@ -242,7 +264,7 @@ app.post("/toggleFavItem", (req, res) => {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
-	if(!(req.body.user_id && req.body.item_id)) {
+	if(!(req.body.user_id && req.body.item_id && req.body.is_fav)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
 	}
@@ -254,33 +276,61 @@ app.post("/toggleFavItem", (req, res) => {
 				"' AND item_id='" + req.body.item_id + "'";
 			con.query(check, (err, result) => {
 				if(!err) {
-					if(result.length == 0) {
-						var insert = "INSERT INTO cus_favourite (user_id, item_id) VALUES (" + req.body.user_id + "," + req.body.item_id + ")";
-						con.query(insert, (err, result) => {
-							if(!err) {
-								res.send({error: null, result: {
-									code: 1,
-									msg: "toggle-favourited"
-								}});
+					if(result.length != 0) {
+						if(req.body.is_fav == 1) {
+							if(!req.body.count) {
+								item_count = 0;
 							} else {
-								res.send({error: {msg: 'failed to insert data'}, result: null});
-								logging("SQL_ERR/favItem-insert: " + err.code);
+								item_count = req.body.count;
 							}
-						});
+							var update = "UPDATE cus_favourite SET count='" + item_count + "' WHERE user_id=" + 
+								req.body.user_id + " AND item_id=" + req.body.item_id;
+							con.query(update, (err, result) => {
+								if(!err) {
+									res.send({error: null, result: {
+										code: 1,
+										msg: "wishlist updated"
+									}});
+								} else {
+									res.send({error: {msg: 'failed to update data'}, result: null});
+									logging("SQL_ERR/favItem-update: " + err.code);
+								}
+							});
+						} else {
+							var del = "DELETE FROM `cus_favourite` WHERE user_id='" + req.body.user_id + 
+								"' AND item_id='" + req.body.item_id + "'";
+							con.query(del, (err, result) => {
+								if(!err) {
+									res.send({error: null, result: {
+										code: 0,
+										msg: "unfavourited"
+									}});
+								} else {
+									res.send({error: {msg: 'failed to delete data'}, result: null});
+									logging("SQL_ERR/favItem-delete: " + err.code);
+								}
+							});
+						}
 					} else {
-						var del = "DELETE FROM `cus_favourite` WHERE user_id='" + req.body.user_id + 
-							"' AND item_id='" + req.body.item_id + "'";
-						con.query(del, (err, result) => {
-							if(!err) {
-								res.send({error: null, result: {
-									code: 0,
-									msg: "toggle-unfavourited"
-								}});
-							} else {
-								res.send({error: {msg: 'failed to delete data'}, result: null});
-								logging("SQL_ERR/favItem-delete: " + err.code);
-							}
-						});
+						if(req.body.is_fav == 1) {
+							var insert = "INSERT INTO cus_favourite (user_id, item_id) VALUES (" + req.body.user_id + "," + req.body.item_id + ")";
+							con.query(insert, (err, result) => {
+								if(!err) {
+									res.send({error: null, result: {
+										code: 1,
+										msg: "favourited"
+									}});
+								} else {
+									res.send({error: {msg: 'failed to insert data'}, result: null});
+									logging("SQL_ERR/favItem-insert: " + err.code);
+								}
+							});
+						} else {
+							res.send({error: true, result: {
+								code: -1,
+								msg: "cannot unfavourite not existing item"
+							}});
+						}
 					}
 				} else {
 					res.send({error: {msg: 'failed to fetch data'}, result: null});

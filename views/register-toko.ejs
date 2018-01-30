@@ -1,0 +1,48 @@
+<html>
+	<head>
+		<style>
+			.label-input {
+				width: 150px; 
+				display: inline-block;
+			}
+		</style>
+	</head>
+	<body>
+		<form method="POST" action="http://<%= domain %>/create-toko">
+			<div>
+				<div>
+					<label class="label-input" for="name">Name</label>
+					<input id="name" name="name" type="text" required />
+				</div>
+				<div>
+					<label class="label-input" for="address">Address</label>
+					<textarea id="address" name="address" required></textarea>
+				</div>
+				<div>
+					<label class="label-input" for="description">Description</label>
+					<textarea id="description" name="description"></textarea>
+				</div>
+				<div>
+					<label class="label-input" for="open_at">Open At</label>
+					<input id="open_at" name="open_at" type="text" required/>
+				</div>
+				<div>
+					<label class="label-input" for="close_at">Close At</label>
+					<input id="close_at" name="close_at" type="text" required/>
+				</div>
+				<div>
+					<label class="label-input" for="latitude">Latitude</label>
+					<input id="latitude" name="latitude" type="text" required/>
+				</div>
+				<div>
+					<label class="label-input" for="longitude">Longitude</label>
+					<input id="longitude" name="longitude" type="text" required/>
+				</div>
+				<div>
+					<label class="label-input" for="phone">Phone</label>
+					<input id="phone" name="phone" type="text" required/>
+				</div>
+			<button type="submit">Submit</button>
+		</form>
+	</body>
+</html>
