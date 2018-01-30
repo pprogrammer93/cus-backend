@@ -75,14 +75,34 @@ app.post("/create-toko", (req, res) => {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
-	if(!(req.body.name && req.body.address && req.body.open_at && 
+	if(!(req.body.name && req.body.address && req.body.open_at &&
 			req.body.close_at && req.body.latitude && req.body.longitude && 
 			req.body.phone)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
 	}
+	var description = "-";
+	if(req.body.description) {
+		description = req.body.description;
+	}
 
+	var hrTime = process.hrtime();
+	var img_id = hrTime[0].toString() + hrTime[1].toString();
+	var img_url = "http://" + host[HOST_DOMAIN] + "/img/toko/" + img_id + "_" + req.body.name;
 
+	var insert = "INSERT INTO cus_toko (name, address, description, img_url, open_at, close_at, latitude, longitude, phone) " + 
+		"VALUES ('" + req.body.name + "','" + req.body.address + "','" + description + "','" + img_url +
+		"','" + req.body.open_at + "','" + req.body.close_at + "','" + req.body.latitude + "','" + req.body.longitude + 
+		"','" + req.body.phone + "')";
+
+	con.query(insert, (err, result) => {
+		if(err) {
+			res.send({error: {msg: 'failed to store data'}, result: null});
+			logging("SQL_ERR/create_toko-insert: " + err.code);
+			return;
+		}
+		res.send({error: null, result: null});
+	});
 });
 
 app.post("/create-account", (req, res) => {
@@ -219,8 +239,8 @@ app.post("/place", (req, res) => {
 		high_rad = req.body.high_rad;
 	}
 	var sql = "SELECT id, name, img_url, address, description, open_at, close_at, latitude, longitude, phone FROM `cus_toko` WHERE SQRT(" + 
-		"(latitude-" + req.body.longitude + ")*(latitude-" + req.body.latitude + ")+" + 
-		"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.latitude + "))" + 
+		"(latitude-" + req.body.latitude + ")*(latitude-" + req.body.latitude + ")+" + 
+		"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.longitude + "))" + 
 		" BETWEEN " + low_rad + " AND " + high_rad +
 		" ORDER BY SQRT((latitude-" + req.body.longitude + ")*(latitude-" + req.body.latitude + ")+" + 
 		"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.latitude + ")) ASC";
