@@ -545,6 +545,18 @@ app.post("/toggleFavItem", (req, res) => {
 	});
 });
 
+app.get("/getFAQ", (req, res) => {
+	var select = "SELECT question, answer FROM cus_faq";
+	con.query(select, (err, result) => {
+		if(err) {
+			res.send({error: {msg: 'failed to retrieve data'}, result: null});
+			logging("SQL_ERR/getFAQ: " + err.code);
+			return;
+		}
+		res.send({error: null, result: result});
+	});
+});
+
 function logging(message) {
 	fs.appendFile('log.dat', message+"\n", function (err) {
 	  if (err) throw err;
