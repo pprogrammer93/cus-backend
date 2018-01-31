@@ -282,7 +282,7 @@ app.post("/place", (req, res) => {
 		high_rad = req.body.high_rad;
 	}
 	var sql = "SELECT id, name, img_url, address, description, open_at, close_at, latitude, longitude, phone FROM `cus_toko` WHERE " +
-		"category=" + req.body.category + " AND " +
+		"category='" + req.body.category + "' AND " +
 		"SQRT(" + 
 		"(latitude-" + req.body.latitude + ")*(latitude-" + req.body.latitude + ")+" + 
 		"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.longitude + "))" + 
