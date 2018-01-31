@@ -176,31 +176,31 @@ app.post("/edit-account", (req,res) => {
 		var phone = result[0].phone;
 		var password = result[0].password;
 
-		if(req.body.current_password == null ^ req.body.password_1 == null ^ req.body.password_2 == null) {
-			if(!req.body.current_password) {
-				res.send({error: {msg: 'please fill the current password'}, result: null});
-				return;
-			}
-			if(!req.body.password_1 && req.body.password_2) {
-				res.send({error: {msg: 'please fill the new password'}, result: null});
-				return;
-			}
-			if(req.body.password_1 && !req.body.password_2) {
-				res.send({error: {msg: 'please retype new password'}, result: null});
-				return;
+		if(req.body.current_password == null || req.body.password_1 == null || req.body.password_2 == null) {
+			if(!(req.body.current_password == null && req.body.password_1 == null && req.body.password_2 == null)) {
+				if(!req.body.current_password) {
+					res.send({error: {msg: 'please fill the current password'}, result: null});
+					return;
+				}
+				if(!req.body.password_1 && req.body.password_2) {
+					res.send({error: {msg: 'please fill the new password'}, result: null});
+					return;
+				}
+				if(req.body.password_1 && !req.body.password_2) {
+					res.send({error: {msg: 'please retype new password'}, result: null});
+					return;
+				}
 			}
 		} else {
-			if(req.body.current_password != null) {
-				if(!hash.verify(req.body.current_password, password)) {
-					res.send({error: {msg: 'invalid current password'}, result: null});
-					return;
-				}
-				if(req.body.password_1 != req.body.password_2) {
-					res.send({error: {msg: 'new passwords do not match'}, result: null});
-					return;
-				}
-				password = hash.generate(req.body.password_1, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
+			if(!hash.verify(req.body.current_password, password)) {
+				res.send({error: {msg: 'invalid current password'}, result: null});
+				return;
 			}
+			if(req.body.password_1 != req.body.password_2) {
+				res.send({error: {msg: 'new passwords do not match'}, result: null});
+				return;
+			}
+			password = hash.generate(req.body.password_1, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
 		}
 
 		if(req.body.name) {
