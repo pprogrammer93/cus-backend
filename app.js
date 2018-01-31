@@ -237,6 +237,54 @@ app.post("/edit-account", (req,res) => {
 	});
 });
 
+app.post("/purchase", (req, res) => {
+	logging("REQUEST/edit-account: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
+		res.send({error: {msg: 'unauthorized'}, result: null});
+		return;
+	}
+	if(!req.body.user_id) {
+		res.send({error: {msg: 'lack of parameter'}, result: null});
+		return;
+	}
+	if(!req.body.item_list) {
+		return;
+	}
+
+	var pending_purchase = [];
+	var hrTime = process.hrtime();
+	var transaction_id = hrTime[0].toString() + hrTime[1].toString();
+	var time = new Date();
+	var created_at = time.getDate + "-" + (time.getMonth() + 1) + "-" + time.getFullYear() + "-" + time.getHours + ":" + time.getMinutes(); 
+
+	item_list = req.body.item_list;
+	item_list.forEach((item, index) => {
+		if(!(item.toko_id && item.item_id && item.item_quantity && item.total_price)) {
+			item.msg = "lack of data";
+			pending_purchase.push(item);
+		} else {
+			var insert = "INSERT INTO cus_transaction (transaction_id, user_id, toko_id, item_id, item_quantity, total_price, created_at) " +
+				"VALUES ('"+transaction_id+"','"+req.body.user_id+"','"+item.toko_id+"','"+item.item_id+"','"+ 
+				item.item_quantity+"','"+item.total_price+"','"+created_at+"')";
+			console.log(insert);
+			con.query(insert, (err, result) => {
+				if(err) {
+					logging("SQL_ERR/purchase: " + err.code + " for " + item);
+					item.msg = "failed to store data";
+					pending_purchase.push(item);
+				}
+				if((index+1) == item_list.length) {
+					if(pending_purchase.length != 0) {
+						res.send({error: {msg: "some purchase cannot be proceeded"}, pending_purchase});
+					} else {
+						res.send({error: null, result: {transaction_id: transaction_id}});
+					}
+				}
+			});
+		}
+	});
+});
+
 app.post("/create-account", (req, res) => {
 	logging("REQUEST/create-account: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
