@@ -148,6 +148,95 @@ app.post("/create-toko", (req, res) => {
 	});
 });
 
+app.post("/edit-account", (req,res) => {
+	logging("REQUEST/edit-account: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
+		res.send({error: {msg: 'unauthorized'}, result: null});
+		return;
+	}
+	if(!req.body.user_id) {
+		res.send({error: {msg: 'lack of parameter'}, result: null});
+		return;
+	}
+
+	var select = "SELECT name, email, phone, password FROM cus_user WHERE id='" + req.body.user_id + "'";
+	con.query(select, (err, result) => {
+		if(err) {
+			res.send({error: {msg: 'failed to validate data'}, result: null});
+			logging("SQL_ERR/edit_account-validate: " + err.code);
+			return;
+		}
+		if(result.length == 0) {
+			res.send({error: {msg: 'user does not exist'}, result: null});
+			return;
+		}
+
+		var name = result[0].name;
+		var email = result[0].email;
+		var phone = result[0].phone;
+		var password = result[0].password;
+
+		if(req.body.current_password == null ^ req.body.password_1 == null ^ req.body.password_2 == null) {
+			if(!req.body.current_password) {
+				res.send({error: {msg: 'please fill the current password'}, result: null});
+				return;
+			}
+			if(!req.body.password_1 && req.body.password_2) {
+				res.send({error: {msg: 'please fill the new password'}, result: null});
+				return;
+			}
+			if(req.body.password_1 && !req.body.password_2) {
+				res.send({error: {msg: 'please retype new password'}, result: null});
+				return;
+			}
+		} else {
+			if(req.body.current_password != null) {
+				if(!hash.verify(req.body.current_password, password)) {
+					res.send({error: {msg: 'invalid current password'}, result: null});
+					return;
+				}
+				if(req.body.password_1 != req.body.password_2) {
+					res.send({error: {msg: 'new passwords do not match'}, result: null});
+					return;
+				}
+				password = hash.generate(req.body.password_1, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
+			}
+		}
+
+		if(req.body.name) {
+			name = req.body.name;
+		}
+		if(req.body.email) {
+			email = req.body.email;
+		}
+		if(req.body.phone) {
+			phone = req.body.phone;
+		}
+
+		var update = "UPDATE cus_user SET name='" + name + "', email='" + email + 
+			"', phone='" + phone + "', password='" + password + "' WHERE id='" + 
+			req.body.user_id + "'";
+		con.query(update, (err, result) => {
+			if(err) {
+				res.send({error: {msg: 'failed to update data'}, result: null});
+				logging("SQL_ERR/edit_account-update: " + err.code);
+				return;
+			}
+			res.send(
+			{
+				error: null, 
+				result: {
+					id: req.body.user_id, 
+					name: name, 
+					email: email, 
+					phone: phone,
+					favourite: []
+				}
+			});
+		});
+	});
+});
+
 app.post("/create-account", (req, res) => {
 	logging("REQUEST/create-account: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
