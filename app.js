@@ -120,7 +120,7 @@ app.post("/create-toko", (req, res) => {
 	}
 	if(!(req.body.name && req.body.address && req.body.open_at &&
 			req.body.close_at && req.body.latitude && req.body.longitude && 
-			req.body.phone)) {
+			req.body.phone && req.body.category)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
 	}
@@ -133,8 +133,8 @@ app.post("/create-toko", (req, res) => {
 	var img_id = hrTime[0].toString() + hrTime[1].toString();
 	var img_url = "http://" + host[HOST_DOMAIN] + "/img/toko/" + img_id + "_" + req.body.name;
 
-	var insert = "INSERT INTO cus_toko (name, address, description, img_url, open_at, close_at, latitude, longitude, phone) " + 
-		"VALUES ('" + req.body.name + "','" + req.body.address + "','" + description + "','" + img_url +
+	var insert = "INSERT INTO cus_toko (name, address, category, description, img_url, open_at, close_at, latitude, longitude, phone) " + 
+		"VALUES ('" + req.body.name + "','" + req.body.address + "','" + req.body.category + "','" + description + "','" + img_url +
 		"','" + req.body.open_at + "','" + req.body.close_at + "','" + req.body.latitude + "','" + req.body.longitude + 
 		"','" + req.body.phone + "')";
 
@@ -281,7 +281,9 @@ app.post("/place", (req, res) => {
 	} else {
 		high_rad = req.body.high_rad;
 	}
-	var sql = "SELECT id, name, img_url, address, description, open_at, close_at, latitude, longitude, phone FROM `cus_toko` WHERE SQRT(" + 
+	var sql = "SELECT id, name, img_url, address, description, open_at, close_at, latitude, longitude, phone FROM `cus_toko` WHERE " +
+		"category=" + req.body.category + " AND " +
+		"SQRT(" + 
 		"(latitude-" + req.body.latitude + ")*(latitude-" + req.body.latitude + ")+" + 
 		"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.longitude + "))" + 
 		" BETWEEN " + low_rad + " AND " + high_rad +
