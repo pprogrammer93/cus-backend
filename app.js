@@ -255,7 +255,7 @@ app.post("/purchase", (req, res) => {
 	var hrTime = process.hrtime();
 	var transaction_id = hrTime[0].toString() + hrTime[1].toString();
 	var time = new Date();
-	var created_at = time.getDate + "-" + (time.getMonth() + 1) + "-" + time.getFullYear() + "-" + time.getHours + ":" + time.getMinutes(); 
+	var created_at = time.getDate() + "-" + (time.getMonth() + 1) + "-" + time.getFullYear() + "-" + time.getHours() + ":" + time.getMinutes(); 
 
 	item_list = req.body.item_list;
 	item_list.forEach((item, index) => {
@@ -266,7 +266,6 @@ app.post("/purchase", (req, res) => {
 			var insert = "INSERT INTO cus_transaction (transaction_id, user_id, toko_id, item_id, item_quantity, total_price, created_at) " +
 				"VALUES ('"+transaction_id+"','"+req.body.user_id+"','"+item.toko_id+"','"+item.item_id+"','"+ 
 				item.item_quantity+"','"+item.total_price+"','"+created_at+"')";
-			console.log(insert);
 			con.query(insert, (err, result) => {
 				if(err) {
 					logging("SQL_ERR/purchase: " + err.code + " for " + item);
