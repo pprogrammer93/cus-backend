@@ -96,7 +96,8 @@ app.post("/create-item", (req, res) => {
 	}
 	var hrTime = process.hrtime();
 	var img_id = hrTime[0].toString() + hrTime[1].toString();
-	var img_url = "http://" + host[HOST_DOMAIN] + "/img/item/" + req.body.toko_id + "/" + img_id + "_" + req.body.name;
+	var img_name = req.body.name.replace(/ /g, '_');
+	var img_url = "http://" + host[HOST_DOMAIN] + "/img/item/" + req.body.toko_id + "/" + img_id + "_" + img_name;
 
 	var insert = "INSERT INTO cus_item (toko_id, name, price, description, img_url) " + 
 		"VALUES ('" + req.body.toko_id + "','" + req.body.name + "','" + req.body.price + "','" + description +
@@ -131,7 +132,8 @@ app.post("/create-toko", (req, res) => {
 
 	var hrTime = process.hrtime();
 	var img_id = hrTime[0].toString() + hrTime[1].toString();
-	var img_url = "http://" + host[HOST_DOMAIN] + "/img/toko/" + img_id + "_" + req.body.name;
+	var img_name = req.body.name.replace(/ /g, '_');
+	var img_url = "http://" + host[HOST_DOMAIN] + "/img/toko/" + img_id + "_" + img_name;
 
 	var insert = "INSERT INTO cus_toko (name, address, category, description, img_url, open_at, close_at, latitude, longitude, phone) " + 
 		"VALUES ('" + req.body.name + "','" + req.body.address + "','" + req.body.category + "','" + description + "','" + img_url +
