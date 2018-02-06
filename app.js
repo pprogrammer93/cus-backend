@@ -547,6 +547,49 @@ app.post("/toggleFavItem", (req, res) => {
 	});
 });
 
+app.post("/getHistory", (req, res) => {
+	logging("REQUEST/getHistory: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	if(req.headers.authorization != host[HOST_KEY]) {
+		res.send({error: {msg: 'unauthorized'}, result: null});
+		return;
+	}
+	if(!(req.body.user_id)) {
+		res.send({error: {msg: 'lack of parameter'}, result: null});
+		return;
+	}
+
+	var select = "SELECT transaction_id, toko_id, item_id, item_quantity, total_price, created_at, status FROM " +
+		"`cus_transaction` WHERE user_id=" + req.body.user_id;
+
+	if(req.body.transaction_id) {
+		select += " AND transaction_id='" + req.body.transaction_id + "'";
+	}
+
+	select += " ORDER BY id DESC";
+
+	if(req.body.offset && req.body.limit) {
+		select = select + " LIMIT " + req.body.offset + "," + req.body.limit;
+	} else if(req.body.limit) {
+		select = select + " LIMIT " + req.body.limit;
+	}
+	if(req.body.transaction_id) {
+
+	}
+
+	console.log(select);
+
+	con.query(select, (err, result) => {
+		if(!err) {
+			res.send({error: null, result: {
+				result
+			}});
+		} else {
+			res.send({error: {msg: 'failed to retrieve data'}, result: null});
+			logging("SQL_ERR/getHistory: " + err.code);
+		}
+	});
+});
+
 app.get("/getFAQ", (req, res) => {
 	var select = "SELECT question, answer FROM cus_faq";
 	con.query(select, (err, result) => {
