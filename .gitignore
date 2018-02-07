@@ -1,1 +1,4 @@
 *.dat
+img/item/*
+img/temp*
+img/toko/*

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<title>CUS</title>
+  	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" 
+  		integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" 
+  		crossorigin="anonymous" />
+  	<script src="http://code.jquery.com/jquery-3.3.1.min.js"
+ 		 integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  		crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" 
+		integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" 
+		crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" 
+		integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" 
+		crossorigin="anonymous"></script>
+
+	<style>
+		body {
+			background: url("http://localhost/cus-backend/img/sources/cus-background.jpg") no-repeat center center fixed; 
+		  	-webkit-background-size: cover;
+		  	-moz-background-size: cover;
+		  	-o-background-size: cover;
+		  	background-size: cover;
+		}
+
+		.gone {
+			display: none;
+		}
+	</style>
+</head>
+<body>
+	<div style="position: absolute; height: 100%; width: 100%;">
+		<div style="width: 60%; position: absolute; top: 5%; left: 50%; transform: translateX(-50%);">
+			<div style="width: 100%; text-align: center;">
+				<h1>CUS</h1>
+			</div>
+			<div style="position: relative; width: 100%; height: 50px;">
+				<form id="input-form" method="POST" action="http://<%= domain %>/toko/<%= toko_id %>/create-item" encType="multipart/form-data">
+					<div class="card border-info mb-3 text-center">
+					  <img id="image-show" class="card-img" />
+					  <div class="card-body">
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label" for="name">Name</label>
+							<div class="col-sm-10">
+								<input id="name" class="form-control form-control-sm" name="name" type="text" placeholder="Kursi Lipat" required />
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label" for="open_at">Price</label>
+							<div class="col-sm-10">
+								<input id="price" class="form-control form-control-sm" name="price" placeholder="15000" type="text" required/>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label" for="description">Description</label>
+							<div class="col-sm-10">
+								<textarea id="description" class="form-control form-control-sm" placeholder="Nice chair, bring everywhere" name="description"></textarea>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label" for="image">Image</label>
+							<div class="col-sm-10">
+								<input id="image" type="file" class="form-control form-control-sm" name="image" accept="image/*" />
+							</div>
+						</div>
+					  </div>
+					  <div class="card-footer text-muted">
+  					  	<input id="img-url" type="hidden" name="img_url" /> 
+					  	<input id="edit-sign" type="hidden" name="edit" value="true" /> 
+					  	<input id="item-id" type="hidden" name="item_id" value="<%= id %>" />
+					  	<button type="submit" class="btn btn-primary">EDIT</button>
+					  </div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		$(document).ready(function() {
+			load_item(0);
+		});
+		function load_item() {
+			$.post("../../../getItemList", 
+				{
+					item_id: <%= id %>
+				}, 
+				function(result) {
+					$("#name").val(result.result[0].name);
+					$("#price").val(result.result[0].price);
+					$("#description").html(result.result[0].description);
+					$("#image-show").attr("src", result.result[0].img_url);
+					$("#img-url").val(result.result[0].img_url);
+			    }
+			);
+		}
+	</script>
+</body>
+</html>

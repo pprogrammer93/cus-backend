@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<title>CUS</title>
+  	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" 
+  		integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" 
+  		crossorigin="anonymous" />
+  	<script src="http://code.jquery.com/jquery-3.3.1.min.js"
+ 		 integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  		crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" 
+		integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" 
+		crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" 
+		integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" 
+		crossorigin="anonymous"></script>
+
+	<style>
+		body {
+			background: url("http://localhost/cus-backend/img/sources/cus-background.jpg") no-repeat center center fixed; 
+		  	-webkit-background-size: cover;
+		  	-moz-background-size: cover;
+		  	-o-background-size: cover;
+		  	background-size: cover;
+		}
+
+		.menu-active {
+			border-bottom: 3px solid #eedd00;
+		}
+
+		.menu-inactive:hover {
+			border-bottom: 3px solid #eedd00;
+			cursor: pointer;
+		}
+
+		#search {
+			position: absolute;
+			z-index: 10;
+			width: 100%;
+		}
+
+		.gone {
+			display: none;
+		}
+	</style>
+</head>
+<body>
+	<div style="position: absolute; height: 100%; width: 100%;">
+		<div style="width: 60%; position: absolute; top: 5%; left: 50%; transform: translateX(-50%);">
+			<div style="width: 100%; text-align: center;">
+				<h1>CUS</h1>
+			</div>
+			<div class="container" style="margin-bottom: 10px;">
+				<div class="row">
+					<div id="toko" class="col menu-active" onclick="change_menu(0)" style="background: white; padding: 7px; text-align: center;">
+						<span style="cursor: pointer;">Toko</span>
+					</div>
+					<div id="item" class="col menu-inactive" onclick="change_menu(1)" style="background: white; padding: 7px; text-align: center;">
+						<span style="cursor: pointer;">Item</span>
+					</div>
+				</div>
+			</div>
+			<div style="position: relative; width: 100%; height: 50px;">
+				<form id="input-form" method="POST" action="http://<%= domain %>/create-toko" encType="multipart/form-data">
+					<div class="card border-info mb-3 text-center">
+					  <img id="image-show" class="card-img" />
+					  <div class="card-body">
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label" for="name">Name</label>
+							<div class="col-sm-10">
+								<input id="name" class="form-control form-control-sm" name="name" type="text" placeholder="Ganesha Store" required />
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label" for="name">Category</label>
+							<div class="col-sm-10">
+								<select id="category" class="form-control form-control-sm" name="category" type="text" placeholder="Ganesha Store" required>
+									 <option value="0" selected>Food and Beverages</option>
+									  <option value="1">Print and Stationary</option>
+								</select>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label" for="address">Address</label>
+							<div class="col-sm-10">
+								<textarea id="address" class="form-control form-control-sm" name="address" placeholder="Jl. Trs. Tubagus Ismail No.17, Sekeloa, Coblong" required></textarea>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label" for="description">Description</label>
+							<div class="col-sm-10">
+								<textarea id="description" class="form-control form-control-sm" placeholder="Sell all your needs" name="description"></textarea>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label" for="open_at">Open At</label>
+							<div class="col-sm-10">
+								<input id="open_at" class="form-control form-control-sm" name="open_at" placeholder="08:00,08:00,08:00,08:00,08:00,09:00,10:00" type="text" required/>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label" for="close_at">Close At</label>
+							<div class="col-sm-10">
+								<input id="close_at" class="form-control form-control-sm" name="close_at" placeholder="18:00,18:00,18:00,18:00,18:00,20:00,15:00" type="text" required/>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label" for="latitude">Latitude</label>
+							<div class="col-sm-4">
+								<input id="latitude" class="form-control form-control-sm" name="latitude" placeholder="-6.983664" type="text" required/>
+							</div>
+							<label class="col-sm-2 col-form-label" for="longitude">Longitude</label>
+							<div class="col-sm-4">
+								<input id="longitude" class="form-control form-control-sm" name="longitude" placeholder="107.623624" type="text" required/>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label" for="phone">Phone</label>
+							<div class="col-sm-10">
+								<input id="phone" class="form-control form-control-sm" name="phone" placeholder="021846256" type="text" required/>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label" for="image">Image</label>
+							<div class="col-sm-10">
+								<input id="image" type="file" class="form-control form-control-sm" name="image" accept="image/*" />
+							</div>
+						</div>
+					  </div>
+					  <div class="card-footer text-muted">
+					  	<input id="img-url" type="hidden" name="img_url" /> 
+					  	<input id="edit-sign" type="hidden" name="edit" value="true" /> 
+					  	<input id="toko-id" type="hidden" name="toko_id" value="<%= id %>" />
+					  	<button type="submit" class="btn btn-primary">EDIT</button>
+					  </div>
+					</div>
+				</form>
+				<input id="search" class="form-control" type="text" placeholder="Search Key" autocomplete="off" />
+			</div>
+			<div id="result" style="margin: auto;">
+			</div>
+		</div>
+		<div id="pagination" class="btn-group" style="position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%);" role="group" aria-label="Basic example">
+			<button type="button" class="btn btn-secondary" onclick="load_toko(0)" disabled> < </button>
+			<button type="button" class="btn btn-warning" onclick="goToAddPage()">NEW</button>
+			<button type="button" class="btn btn-secondary" onclick="load_toko(0)" disabled> > </button>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		const MENU_EDIT = 0;
+		const MENU_ITEM  = 1;
+
+		var menuState = MENU_EDIT;
+
+		$(document).ready(function() {
+			$("#pagination").addClass("gone");
+			$("#search").addClass("gone");
+		});
+
+		function switch_class(element, oldClass, newClass) {
+			$(element).removeClass(oldClass);
+			$(element).addClass(newClass);
+		}
+
+		function change_menu(menu) {
+			if(menu == MENU_ITEM && menuState == MENU_EDIT) {
+				switch_class("#toko", "menu-active", "menu-inactive");
+				switch_class("#item", "menu-inactive", "menu-active");
+				$("#input-form").addClass("gone");
+				$("#pagination").removeClass("gone");
+				$("#search").removeClass("gone");
+			} else if(menu == MENU_EDIT && menuState == MENU_ITEM) {
+				switch_class("#toko", "menu-inactive", "menu-active");
+				switch_class("#item", "menu-active", "menu-inactive");
+				$("#input-form").removeClass("gone");
+				$("#pagination").addClass("gone");
+			}
+			menuState = menu;
+			$("#search").val("");
+			execSearch();
+		}
+	</script>
+
+	<script type="text/javascript">
+		var typingAlarm;
+		var timer = 400;
+		var page = 0;
+		var maxItem = 3;
+		
+
+		$(document).ready(function() {
+			execSearch();
+		});
+		$("#search").keyup(function() {
+			clearTimeout(typingAlarm);
+			typingAlarm = setTimeout(execSearch, timer);
+		});
+		function execSearch() {
+			$("#result").html("");
+			if(menuState == MENU_EDIT) {
+				load_toko(0);
+			} else {
+				load_item(0);
+			}
+		}
+
+		function load_toko() {
+			$.post("../getToko", 
+				{
+					toko_id: <%= id %>
+				}, 
+				function(result) {
+					$("#name").val(result.result[0].name);
+					$("#category").val(result.result[0].category);
+					$("#address").html(result.result[0].address);
+					$("#description").html(result.result[0].description);
+					$("#open_at").val(result.result[0].open_at);
+					$("#close_at").val(result.result[0].close_at);
+					$("#latitude").val(result.result[0].latitude);
+					$("#longitude").val(result.result[0].longitude);
+					$("#phone").val(result.result[0].phone);
+					$("#image-show").attr("src", result.result[0].img_url);
+					$("#img-url").val(result.result[0].img_url);
+			    }
+			);
+		}
+
+		function load_item(p) {
+			$("#result").html("");
+			var searchKey = $("#search").val();
+			$.post("../getItemList",
+				{
+					toko_id: <%= id %>,
+					search: searchKey,
+					offset: (p * maxItem),
+					limit: (maxItem+1)	
+				},
+				function(result) {
+					result.result.forEach(function(item, index) {
+						if((index+1) == (maxItem+1)) {
+							set_pagination(false, "load_item");
+						} else {
+							$("#result").append(createFrameItem(item.id, item.name, item.description, item.price));
+							if((index+1) == result.result.length) {
+								set_pagination(true, "load_item");
+							}
+						}
+					});
+				});
+		}
+
+		function set_pagination(isRightDisabled, load_function) {
+			var btnLeft;
+			var btnRight;
+			var disableLeft;
+			var disableRight;
+
+			if(page == 0) {
+				disableLeft = "disabled";
+			} else {
+				disableLeft = "";
+			}
+			if(isRightDisabled) {
+				disableRight = "disabled";
+			} else {
+				disableRight = "";
+			}
+
+			var btnMid;
+			if(load_function == "load_payment") {
+				btnMid = "";
+			} else {
+				btnMid = '<button type="button" class="btn btn-warning" onclick="goToAddPage()">NEW</button>';
+			}
+			btnLeft = '<button type="button" class="btn btn-secondary" onclick="'+load_function+'('+(page-1)+')" '+disableLeft+'> < </button>';
+			btnRight = '<button type="button" class="btn btn-secondary" onclick="'+load_function+'('+(page+1)+')" '+disableRight+'> > </button>';
+
+			$("#pagination").html(btnLeft+btnMid+btnRight);
+		}
+
+		function createFrameItem(id, name, description, price) {
+			return  '<div class="card" onclick="goToItem('+id+')">'+
+					'  <div style="padding: 10px;" class="card-body">'+
+					'    <h5 class="card-title">'+name+'</h5>'+
+					'    <p style="font-size: 0.8em" class="card-subtitle mb-2 text-muted">'+description+'</p>'+
+					'    <p style="font-size: 0.75em" class="card-text">'+price+'</p>'+
+					'  </div>'+
+					'</div>';
+		}
+
+		function goToItem(id) {
+			window.location.href = 'http://<%= domain %>/toko/<%= id %>/item/'+id;
+		}
+	</script>
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<title>CUS</title>
+  	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" 
+  		integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" 
+  		crossorigin="anonymous" />
+  	<script src="http://code.jquery.com/jquery-3.3.1.min.js"
+ 		 integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  		crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" 
+		integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" 
+		crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" 
+		integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" 
+		crossorigin="anonymous"></script>
+
+	<style>
+		body {
+			background: url("http://localhost/cus-backend/img/sources/cus-background.jpg") no-repeat center center fixed; 
+		  	-webkit-background-size: cover;
+		  	-moz-background-size: cover;
+		  	-o-background-size: cover;
+		  	background-size: cover;
+		}
+
+		.menu-active {
+			border-bottom: 3px solid #eedd00;
+		}
+
+		.menu-inactive:hover {
+			border-bottom: 3px solid #eedd00;
+			cursor: pointer;
+		}
+
+		#search {
+			position: absolute;
+			z-index: 10;
+		}
+
+		#search-option {
+			position: absolute;
+			right: 0px;
+			z-index: 0;
+		}
+
+		.search-toko {
+			width: 100%;
+		}
+
+		.search-pembayaran {
+			width: 70%;
+		}
+
+		.input-transition {
+            -webkit-transition: width 0.2s ease-out;
+            -moz-transition: width 0.2s ease-out;
+            transition: width 0.2s ease-out;
+		}
+
+		.option-toko {
+			width: 0%;
+		}
+
+		.option-pembayaran {
+			width: 30%;;
+		}
+
+		.gone {
+			display: none;
+		}
+
+		.waiting {
+			color: #ff5555;
+		}
+
+		.completed {
+			color: #5555ff;
+		}
+	</style>
+</head>
+<body>
+	<div style="position: absolute; height: 100%; width: 100%;">
+		<div style="width: 60%; position: absolute; top: 5%; left: 50%; transform: translateX(-50%);">
+			<div style="width: 100%; text-align: center;">
+				<h1>CUS</h1>
+			</div>
+			<div class="container" style="margin-bottom: 10px;">
+				<div class="row">
+					<div id="toko" class="col menu-active" onclick="change_menu(0)" style="background: white; padding: 7px; text-align: center;">
+						<span style="cursor: pointer;">Toko</span>
+					</div>
+					<div id="pembayaran" class="col menu-inactive" onclick="change_menu(1)" style="background: white; padding: 7px; text-align: center;">
+						<span style="cursor: pointer;">Pembayaran</span>
+					</div>
+				</div>
+			</div>
+			<div style="position: relative; width: 100%; height: 50px;">
+				<input id="search" class="form-control input-transition search-toko" type="text" placeholder="Search Key" autocomplete="off" />
+				<select id="search-option" class="form-control input-transition option-toko" onchange="load_payment(0)">
+			        <option selected>Both</option>
+			        <option>Completed</option>
+			        <option>Waiting</option>
+			      </select>
+			</div>
+			<div id="result" style="margin: auto;">
+			</div>
+		</div>
+		<div id="pagination" class="btn-group" style="position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%);" role="group" aria-label="Basic example">
+			<button type="button" class="btn btn-secondary" onclick="load_toko(0)" disabled> < </button>
+			<button type="button" class="btn btn-warning" onclick="goToAddPage()">NEW</button>
+			<button type="button" class="btn btn-secondary" onclick="load_toko(0)" disabled> > </button>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		const MENU_TOKO = 0;
+		const MENU_PEMBAYARAN  = 1;
+
+		var menuState = MENU_TOKO;
+
+		$(document).ready(function() {
+			$("#search-option").disabled = true;
+		});
+
+		function switch_class(element, oldClass, newClass) {
+			$(element).removeClass(oldClass);
+			$(element).addClass(newClass);
+		}
+
+		function change_menu(menu) {
+			if(menu == MENU_PEMBAYARAN && menuState == MENU_TOKO) {
+				switch_class("#toko", "menu-active", "menu-inactive");
+				switch_class("#pembayaran", "menu-inactive", "menu-active");
+				switch_class("#search", "search-toko", "search-pembayaran");
+				switch_class("#search-option", "option-toko", "option-pembayaran");
+				$("#search-option").disabled = false;
+			} else if(menu == MENU_TOKO && menuState == MENU_PEMBAYARAN) {
+				switch_class("#toko", "menu-inactive", "menu-active");
+				switch_class("#pembayaran", "menu-active", "menu-inactive");
+				switch_class("#search", "search-pembayaran", "search-toko");
+				switch_class("#search-option", "option-pembayaran", "option-toko");
+				$("#search-option").disabled = true;
+			}
+			menuState = menu;
+			$("#search").val("");
+			execSearch();
+		}
+	</script>
+
+	<script type="text/javascript">
+		var typingAlarm;
+		var timer = 400;
+		var page = 0;
+		var maxItem = 3;
+		
+
+		$(document).ready(function() {
+			execSearch();
+		});
+		$("#search").keyup(function() {
+			clearTimeout(typingAlarm);
+			typingAlarm = setTimeout(execSearch, timer);
+		});
+		function execSearch() {
+			if(menuState == MENU_TOKO) {
+				load_toko(0);
+			} else {
+				load_payment(0);
+			}
+		}
+
+		function load_toko(p) {
+			$("#result").html("");
+			page = p;
+			var searchKey = $("#search").val();
+			$.post("getToko", 
+				{
+					search: searchKey,
+					offset: (page * maxItem),
+					limit: (maxItem+1)
+				}, 
+				function(result) {
+					result.result.forEach(function(item, index) {
+						if((index+1) == (maxItem+1)) {
+							set_pagination(false, "load_toko");
+						} else {
+							$("#result").append(createFrameToko(item.id, item.name, item.address, item.description));
+							if((index+1) == result.result.length) {
+								set_pagination(true, "load_toko");
+							}
+						}
+					});
+			    }
+			);
+		}
+
+		function load_payment(p) {
+			$("#result").html("");
+			page = p;
+			var status = $("#search-option").find(":selected").text().toLowerCase();
+			var searchKey = $("#search").val();
+			$.post("getHistory",
+				{
+					user_id: 0,
+					privilege: "<%= privilege %>",
+					status: status,	
+					transaction_id: searchKey,
+					offset: (page * maxItem),
+					limit: (maxItem+1)	
+				},
+				function(result) {
+					result.result.forEach(function(item, index) {
+						if((index+1) == (maxItem+1)) {
+							set_pagination(false, "load_payment");
+						} else {
+							$("#result").append(createFramePayment(item.transaction_id, item.total_price, item.created_at, item.status));
+							if((index+1) == result.result.length) {
+								set_pagination(true, "load_payment");
+							}
+						}
+					});
+				});
+		}
+
+		function set_pagination(isRightDisabled, load_function) {
+			var btnLeft;
+			var btnRight;
+			var disableLeft;
+			var disableRight;
+
+			if(page == 0) {
+				disableLeft = "disabled";
+			} else {
+				disableLeft = "";
+			}
+			if(isRightDisabled) {
+				disableRight = "disabled";
+			} else {
+				disableRight = "";
+			}
+
+			var btnMid;
+			if(load_function == "load_payment") {
+				btnMid = "";
+			} else {
+				btnMid = '<button type="button" class="btn btn-warning" onclick="goToAddPage()">NEW</button>';
+			}
+			btnLeft = '<button type="button" class="btn btn-secondary" onclick="'+load_function+'('+(page-1)+')" '+disableLeft+'> < </button>';
+			btnRight = '<button type="button" class="btn btn-secondary" onclick="'+load_function+'('+(page+1)+')" '+disableRight+'> > </button>';
+
+			$("#pagination").html(btnLeft+btnMid+btnRight);
+		}
+
+		function createFrameToko(id, name, address, description) {
+			return  '<div class="card" onclick="goToToko('+id+')">'+
+					'  <div style="padding: 10px;" class="card-body">'+
+					'    <h5 class="card-title">'+name+'</h5>'+
+					'    <p style="font-size: 0.8em" class="card-subtitle mb-2 text-muted">'+description+'</p>'+
+					'    <p style="font-size: 0.75em" class="card-text">'+address+'</p>'+
+					'  </div>'+
+					'</div>';
+		}
+
+		function createFramePayment(transaction_id, total_price, created_at, status) {
+			var color;
+			if(status == 0) {
+				color = "waiting"
+			} else if(status == 1) {
+				color = "completed";
+			}
+			return  '<div class="card" onclick="goToPayment('+transaction_id+')">'+
+					'  <div style="padding: 10px;" class="card-body">'+
+					'    <h5 class="card-title ' + color + '">'+transaction_id+'</h5>'+
+					'    <p style="font-size: 0.8em" class="card-subtitle mb-2 text-muted">'+total_price+'</p>'+
+					'    <p style="font-size: 0.75em" class="card-text">'+created_at+'</p>'+
+					'  </div>'+
+					'</div>';
+		}
+
+		function goToAddPage() {
+			window.location.href = 'http://<%= domain %>/register-toko';
+		}
+
+		function goToToko(id) {
+			window.location.href = 'http://<%= domain %>/toko/'+id;
+		}
+
+		function goToPayment(transaction_id) {
+			window.location.href = 'http://<%= domain %>/payment/'+transaction_id;
+		}
+	</script>
+</body>
+</html>

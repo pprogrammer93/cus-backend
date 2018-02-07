@@ -5,6 +5,9 @@ var app = express();
 var bodyParser = require("body-parser");
 var session = require('express-session');
 var MySQLStore = require('express-mysql-session');
+var path = require('path');
+var multer  = require('multer');
+var upload = multer({ dest: 'img/temp/' });
 
 const HOST_HOST = 0;
 const HOST_USER = 1;
@@ -13,6 +16,7 @@ const HOST_PORT = 3;
 const HOST_DB = 4;
 const HOST_DOMAIN = 5;
 const HOST_KEY = 6;
+const HOST_DIR = 7;
 
 var host = fs.readFileSync('host.dat', 'utf8').split(",");
 if(host[HOST_PASS] == 0) {
@@ -37,16 +41,14 @@ con.connect(function(err) {
 		connect_msg = "Opps! " + err.code;
 	}
 });
-app.get("/", (req, res) => {
-	res.send(connect_msg);
-});
-var sessionStore = new MySQLStore({}, con);
 
+var sessionStore = new MySQLStore({}, con);
 app.set("view engine", "ejs");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
 	extended: true
 }));
+
 app.use(session({
 	key: 'session_authorized',
 	secret: 'authorized',
@@ -57,6 +59,10 @@ app.use(session({
 
 app.listen(3000, () => {
 	console.log("Server On!");
+});
+
+app.get("/", (req, res) => {
+	res.render("main.ejs", {domain: host[HOST_DOMAIN], privilege: host[HOST_KEY]});
 });
 
 app.get("/register-toko", (req, res) => {
@@ -74,19 +80,88 @@ app.get("/register-item", (req, res) => {
 	res.render("register-item-noid.ejs", {domain: host[HOST_DOMAIN]});
 });
 
-app.get("/register-item/:id", (req, res) => {
+app.get("/toko/:toko_id/register-item", (req, res) => {
 	req.session.authorized = true;
-	res.render("register-item.ejs", {domain: host[HOST_MAIN]});
+	res.render("register-item.ejs", {domain: host[HOST_DOMAIN], toko_id: req.params.toko_id, dir: host[HOST_DIR]});
 });
 
-app.post("/create-item", (req, res) => {
+app.get("/toko/:id", (req, res) => {
+	res.render("toko.ejs", {id: req.params.id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY]});
+});
+
+app.get("/toko/:toko_id/item/:id", (req, res) => {
+	res.render("item.ejs", {toko_id: req.params.toko_id, id: req.params.id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY]});
+});
+
+app.get("/payment/:transaction_id", (req, res) => {
+	res.render("review.ejs", {id: req.params.transaction_id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY]});
+});
+
+app.post("/getToko", (req, res) => {
+	logging("REQUEST/getToko: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+
+	var sql;
+
+	if(!req.body.toko_id) {
+		var limit = 10;
+		if(req.body.limit) {
+			limit = req.body.limit;
+		}
+		if(req.body.search) {
+			sql = "SELECT id, name, img_url, address, description, category FROM `cus_toko`" +
+				" WHERE name LIKE '%" + req.body.search + "%' OR address LIKE '%" +
+				req.body.search + "%' ORDER BY id DESC LIMIT " + req.body.offset + ", " + limit;
+		} else {
+			sql = "SELECT id, name, img_url, address, description, category FROM `cus_toko`" +
+					" ORDER BY id DESC LIMIT " + req.body.offset + ", " + limit;
+		}
+	} else {
+		sql = "SELECT name, img_url, address, description, category, open_at, close_at, latitude, longitude, phone " +
+			"FROM `cus_toko` WHERE id=" + req.body.toko_id;
+	}
+
+	con.query(sql, (err, result_1) => {
+		if(!err) {
+			if(req.body.count && !req.body.toko_id) {
+				if(req.body.search) {
+					sql = "SELECT id FROM `cus_toko` + WHERE name LIKE '%" + req.body.search + "%' OR address LIKE '%" +
+						req.body.search + "%'";
+				} else {
+					sql = "SELECT id FROM `cus_toko`";
+				}
+				con.query(sql, (err, result_2) => {
+					if(!err) {
+						res.send({error: null, result: {
+							toko: result_1,
+							count: result_2
+						}});
+					} else {
+						res.send({error: {msg: 'failed to acquire data'}, result: null});
+						logging("SQL_ERR/place: " + err.code);
+					}
+				});
+			} else {
+				res.send({error: null, result: result_1});
+			}
+		} else {
+			res.send({error: {msg: 'failed to acquire data'}, result: null});
+			logging("SQL_ERR/place: " + err.code);
+		}
+	});
+});
+
+app.post("/toko/:toko_id/create-item",  upload.single('image'), (req, res) => {
 	logging("REQUEST/create-item: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
-	if(!(req.body.toko_id && req.body.name && req.body.price)) {
+	if(!(req.body.name && req.body.price)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
+		return;
+	}
+	if(req.file && req.file.size > (4 * 1024 * 1024)) {
+		res.send({error: {msg: 'image too large'}, result: null});
 		return;
 	}
 
@@ -94,26 +169,100 @@ app.post("/create-item", (req, res) => {
 	if(req.body.description) {
 		description = req.body.description;
 	}
-	var hrTime = process.hrtime();
-	var img_id = hrTime[0].toString() + hrTime[1].toString();
-	var img_name = req.body.name.replace(/ /g, '_');
-	var img_url = "http://" + host[HOST_DOMAIN] + "/img/item/" + req.body.toko_id + "/" + img_id + "_" + img_name;
+	var img_url = "";
+	if(req.body.img_url) {
+		img_url = req.body.img_url;
+	}
 
-	var insert = "INSERT INTO cus_item (toko_id, name, price, description, img_url) " + 
-		"VALUES ('" + req.body.toko_id + "','" + req.body.name + "','" + req.body.price + "','" + description +
-		"','" + img_url + "')";
+	if(req.file) {
+		var extension = req.file.originalname.split(".");
+		var filepath = "img/temp/" + req.file.filename;
+		var hrTime = process.hrtime();
+		var img_id = hrTime[0].toString() + hrTime[1].toString();
+		var img_name = req.body.name.replace(/ /g, '_');
+		var img_storage = "img/item/" + req.params.toko_id + "/" + img_id + "_" + img_name + "." + extension[1];
+		img_url = "http://" + host[HOST_DIR] + "/" + img_storage;
+
+		if(req.body.edit) {
+			var old_img = req.body.img_url.substring(req.body.img_url.indexOf("img"), req.body.img_url.length);
+			fs.unlink(old_img, function (err) {
+				if(err) {
+					logging("IMAGE/create_toko-insert: " + err.code + " " + result.insertId + " Need to erase image manually.");
+				} else {
+					fs.rename(filepath, img_storage, function (err) {
+					  if (err) {
+						res.send({error: {msg: 'failed to store image'}, result: null});
+						logging("IMAGE/create_toko-insert: " + err.code);
+						return;
+					  }
+					});
+				}
+			});
+		} else {
+			fs.rename(filepath, img_storage, function (err) {
+			  if (err) {
+				res.send({error: {msg: 'failed to store image'}, result: null});
+				logging("IMAGE/create_item-insert: " + err.code);
+			  } 
+			});
+		}
+	} else {
+		if(req.body.edit) {
+			if(img_url != "") {
+				var start = img_url.substring(0, img_url.indexOf("item") + 5);
+				var domain = start.substring(0, start.indexOf("img"));
+				var dir = start.substring(start.indexOf("img"), start.length);
+
+				var end = img_url.substring(img_url.indexOf("item") + 5, img_url.length);
+				var extension = end.substring(end.indexOf(".") + 1, end.length);
+				var img_id = end.substring(end.indexOf("/")+1, end.indexOf("_"));
+
+				var old_name = end.substring(end.indexOf("_")+1, end.indexOf("."));
+				var img_name = req.body.name.replace(/ /g, '_');
+				var old_img = dir + req.params.toko_id + "/" + img_id + "_" + old_name + "." + extension;
+				var img_storage = dir + "/" + req.params.toko_id + "/" + img_id + "_" + img_name + "." + extension;
+				img_url = domain + img_storage;
+
+				fs.rename(old_img, img_storage, function (err) {
+				  if (err) {
+					res.send({error: {msg: 'failed to store image'}, result: null});
+					logging("IMAGE/create_toko-insert: " + err.code + " " + old_img + " " + img_storage);
+					return;
+				  }
+				});
+			}
+		}
+	}
+
+	var insert;
+	if(req.body.edit) {
+		insert = "REPLACE INTO cus_item (id, toko_id, name, price, description, img_url) " + 
+			"VALUES ('" + req.body.item_id + "','" + req.params.toko_id + "','" + req.body.name + "','" + req.body.price + "','" + description +
+			"','" + img_url + "')";
+	} else {
+		insert = "INSERT INTO cus_item (toko_id, name, price, description, img_url) " + 
+			"VALUES ('" + req.params.toko_id + "','" + req.body.name + "','" + req.body.price + "','" + description +
+			"','" + img_url + "')";
+	}
+	
 
 	con.query(insert, (err, result) => {
 		if(err) {
 			res.send({error: {msg: 'failed to store data'}, result: null});
 			logging("SQL_ERR/create_item-insert: " + err.code);
+			fs.unlink(img_storage, function (err) {
+			 	logging("IMAGE/create_item-insert: " + err.code + " " + img_storage + " Need to erase image manually.");
+			});
 			return;
+		}
+		if(req.body.edit) {
+			res.redirect("toko/" + req.params.toko_id + "/item/" + req.body.item_id);
 		}
 		res.send({error: null, result: null});
 	});
 });
 
-app.post("/create-toko", (req, res) => {
+app.post("/create-toko", upload.single('image'), (req, res) => {
 	logging("REQUEST/create-toko: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
@@ -125,28 +274,125 @@ app.post("/create-toko", (req, res) => {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
 	}
+	if(req.file && req.file.size > (4 * 1024 * 1024)) {
+		res.send({error: {msg: 'image too large'}, result: null});
+		return;
+	}
+
 	var description = "-";
+	var img_url = "";
 	if(req.body.description) {
 		description = req.body.description;
 	}
+	if(req.body.img_url) {
+		img_url = req.body.img_url;
+	}
 
-	var hrTime = process.hrtime();
-	var img_id = hrTime[0].toString() + hrTime[1].toString();
-	var img_name = req.body.name.replace(/ /g, '_');
-	var img_url = "http://" + host[HOST_DOMAIN] + "/img/toko/" + img_id + "_" + img_name;
+	if(req.file) {
+		var extension = req.file.originalname.split(".");
+		var filepath = "img/temp/" + req.file.filename;
+		var hrTime = process.hrtime();
+		var img_id = hrTime[0].toString() + hrTime[1].toString();
+		var img_name = req.body.name.replace(/ /g, '_');
+		var img_storage = "img/toko/" + img_id + "_" + img_name + "." + extension[1];
+		img_url = "http://" + host[HOST_DIR] + "/" + img_storage;
 
-	var insert = "INSERT INTO cus_toko (name, address, category, description, img_url, open_at, close_at, latitude, longitude, phone) " + 
-		"VALUES ('" + req.body.name + "','" + req.body.address + "','" + req.body.category + "','" + description + "','" + img_url +
-		"','" + req.body.open_at + "','" + req.body.close_at + "','" + req.body.latitude + "','" + req.body.longitude + 
-		"','" + req.body.phone + "')";
+		if(req.body.edit) {
+			var old_img = req.body.img_url.substring(req.body.img_url.indexOf("img"), req.body.img_url.length);
+			fs.unlink(old_img, function (err) {
+				if(err) {
+					logging("IMAGE/create_toko-insert: " + err.code + " " + result.insertId + " Need to erase image manually.");
+				} else {
+					fs.rename(filepath, img_storage, function (err) {
+					  if (err) {
+						res.send({error: {msg: 'failed to store image'}, result: null});
+						logging("IMAGE/create_toko-insert: " + err.code);
+						return;
+					  }
+					});
+				}
+			});
+		} else {
+			fs.rename(filepath, img_storage, function (err) {
+			  if (err) {
+				res.send({error: {msg: 'failed to store image'}, result: null});
+				logging("IMAGE/create_toko-insert: " + err.code);
+				return;
+			  }
+			});
+		}
+	} else {
+		if(req.body.edit) {
+			if(img_url != "") {
+				var start = img_url.substring(0, img_url.indexOf("toko") + 5);
+				var domain = start.substring(0, start.indexOf("img"));
+				var dir = start.substring(start.indexOf("img"), start.length);
+
+				var end = img_url.substring(img_url.indexOf("toko") + 5, img_url.length);
+				var extension = end.substring(end.indexOf(".") + 1, end.length);
+				var img_id = end.substring(0, end.indexOf("_"));
+
+				var old_name = end.substring(end.indexOf("_")+1, end.indexOf("."));
+				var img_name = req.body.name.replace(/ /g, '_');
+				var old_img = dir + img_id + "_" + old_name + "." + extension;
+				var img_storage = dir + img_id + "_" + img_name + "." + extension;
+				img_url = domain + img_storage;
+
+				fs.rename(old_img, img_storage, function (err) {
+				  if (err) {
+					res.send({error: {msg: 'failed to store image'}, result: null});
+					logging("IMAGE/create_toko-insert: " + err.code + " " + old_img + " " + img_storage);
+					return;
+				  }
+				});
+			}
+		}
+	}
+
+	var insert;
+	if(req.body.edit) {
+		insert = "REPLACE INTO cus_toko (id, name, address, category, description, img_url, open_at, close_at, latitude, longitude, phone) " + 
+			"VALUES ('" + req.body.toko_id + "','" + req.body.name + "','" + req.body.address + "','" + req.body.category + "','" + description + "','" + img_url +
+			"','" + req.body.open_at + "','" + req.body.close_at + "','" + req.body.latitude + "','" + req.body.longitude + 
+			"','" + req.body.phone + "')";
+	} else {
+		insert = "INSERT INTO cus_toko (name, address, category, description, img_url, open_at, close_at, latitude, longitude, phone) " + 
+			"VALUES ('" + req.body.name + "','" + req.body.address + "','" + req.body.category + "','" + description + "','" + img_url +
+			"','" + req.body.open_at + "','" + req.body.close_at + "','" + req.body.latitude + "','" + req.body.longitude + 
+			"','" + req.body.phone + "')";
+	}
 
 	con.query(insert, (err, result) => {
 		if(err) {
 			res.send({error: {msg: 'failed to store data'}, result: null});
 			logging("SQL_ERR/create_toko-insert: " + err.code);
+			fs.unlink(img_storage, function (err) {
+			 	logging("IMAGE/create_toko-insert: " + err.code + " " + img_storage + " Need to erase image manually.");
+			});
 			return;
+		} else {
+			if(req.body.edit) {
+				res.redirect("toko/" + req.body.toko_id);
+				//res.render("toko.ejs", {id: req.body.toko_id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY]});
+				//res.send('<script type="text/javascript">window.location.href = "http://'+host[HOST_DOMAIN]+'/toko/'+req.body.toko_id+'"</script>');
+			} else {
+				fs.mkdir("img/item/" + result.insertId, (err) => {
+					if(err) {
+						res.send({error: {msg: 'failed to access filesystem'}, result: null});
+						logging("FILE/create_toko-insert: " + err.code);
+						var del = "DELETE FROM cus_toko WHERE id=" + result.insertId;
+						con.query(del, (err, result) => {
+						 	logging("SQL_ERR/create_toko-delete: " + err.code + " " + img_storage + " Need to delete row manually.");
+						})
+						fs.unlink(img_storage, function (err) {
+						 	logging("IMAGE/create_toko-insert: " + err.code + " " + result.insertId + " Need to erase image manually.");
+						});
+						return;
+					}
+				})
+				res.send({error: null, result: null});
+			}
 		}
-		res.send({error: null, result: null});
 	});
 });
 
@@ -440,23 +686,37 @@ app.post("/place", (req, res) => {
 
 app.post("/getItemList", (req, res) => {
 	logging("REQUEST/getItemList: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization != host[HOST_KEY]) {
-		res.send({error: {msg: 'unauthorized'}, result: null});
-		return;
-	}
-	if(!(req.body.toko_id)) {
+	if(!(req.body.toko_id) && !req.body.item_id) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
 	}
 
-	var sql = "SELECT id, name, price, img_url, description FROM `cus_item` WHERE " + 
-		"toko_id='" + req.body.toko_id + "'";
+	var sql;
+	if(req.body.item_id) {
+		sql = "SELECT toko_id, name, price, img_url, description FROM `cus_item` WHERE " + 
+			"id='" + req.body.item_id + "'";
+	} else {
+		sql = "SELECT id, name, price, img_url, description FROM `cus_item` WHERE " + 
+			"toko_id='" + req.body.toko_id + "'";
+	}
+	
+	if(req.body.search && req.body.search != "") {
+		sql += " AND name LIKE '%" + req.body.search + "%'";
+	}
+	if(req.body.limit) {
+		if(req.body.offset) {
+			sql += " LIMIT " + req.body.offset + ", " + req.body.limit;
+		} else {
+			sql += " LIMIT " + req.body.limit;
+		}
+	}
+
 	con.query(sql, (err, result) => {
 		if(!err) {
 			res.send({error: null, result});
 		} else {
 			res.send({error: {msg: 'failed to acquire data'}, result: null});
-			logging("SQL_ERR/item: " + err.code);
+			logging("SQL_ERR/item: " + err.code + " " + sql);
 		}
 	});
 });
@@ -547,9 +807,28 @@ app.post("/toggleFavItem", (req, res) => {
 	});
 });
 
+
+app.post("/payment/:transaction_id/confirm", (req, res) => {
+	logging("REQUEST/payment-confirmation: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	if(!(req.body.payment_id)) {
+		res.send({error: {msg: 'lack of parameter'}, result: null});
+		return;
+	}
+	console.log(req.body.payment_id);
+	var replace = "UPDATE `cus_transaction` SET status=1 WHERE id=" + req.body.payment_id;
+	con.query(replace, (err, result) => {
+		if(err) {
+			res.send({error: {msg: 'failed to change data'}, result: null});
+			logging("SQL_ERR/payment-confirmation: " + err.code + " " + replace);
+		} else {
+			res.send({error: null, result: null});
+		}
+	});
+}); 
+
 app.post("/getHistory", (req, res) => {
 	logging("REQUEST/getHistory: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization != host[HOST_KEY]) {
+	if(req.headers.authorization != host[HOST_KEY] && req.body.privilege != host[HOST_KEY]) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
@@ -558,34 +837,53 @@ app.post("/getHistory", (req, res) => {
 		return;
 	}
 
-	var select = "SELECT transaction_id, toko_id, item_id, item_quantity, total_price, created_at, status FROM " +
-		"`cus_transaction` WHERE user_id=" + req.body.user_id;
-
-	if(req.body.transaction_id) {
-		select += " AND transaction_id='" + req.body.transaction_id + "'";
+	var select;
+	if(req.body.privilege == host[HOST_KEY]) {
+		if(req.body.payment) {
+			select = "SELECT id, name, item_quantity, total_price, status FROM `cus_transaction` " +
+				"WHERE transaction_id=" + req.body.transaction_id;
+		} else {
+			select = "SELECT transaction_id, total_price, created_at, status FROM " +
+				"`cus_transaction`";
+			if(req.body.status == "completed") {
+				select += " WHERE status=1";
+			} else if(req.body.status == "waiting") {
+				select += " WHERE status=0";
+			}
+			if(req.body.transaction_id != "") {
+				if(req.body.status == "both") {
+					select += " WHERE transaction_id LIKE '%" + req.body.transaction_id + "%'";
+				} else {
+					select += " AND transaction_id LIKE '%" + req.body.transaction_id + "%'";
+				}
+			}
+			select += " GROUP BY transaction_id";
+		}
+	} else {
+		select = "SELECT transaction_id, toko_id, item_id, item_quantity, total_price, created_at, status FROM " +
+			"`cus_transaction`";
+		if(req.body.transaction_id) {
+			select += " AND transaction_id='" + req.body.transaction_id + "'";
+		}
 	}
 
 	select += " ORDER BY id DESC";
 
 	if(req.body.offset && req.body.limit) {
-		select = select + " LIMIT " + req.body.offset + "," + req.body.limit;
+		select += " LIMIT " + req.body.offset + "," + req.body.limit;
 	} else if(req.body.limit) {
-		select = select + " LIMIT " + req.body.limit;
+		select += " LIMIT " + req.body.limit;
 	}
 	if(req.body.transaction_id) {
 
 	}
 
-	console.log(select);
-
 	con.query(select, (err, result) => {
 		if(!err) {
-			res.send({error: null, result: {
-				result
-			}});
+			res.send({error: null, result: result});
 		} else {
 			res.send({error: {msg: 'failed to retrieve data'}, result: null});
-			logging("SQL_ERR/getHistory: " + err.code);
+			logging("SQL_ERR/getHistory: " + err.code + " " + select);
 		}
 	});
 });

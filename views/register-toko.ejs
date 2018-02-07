@@ -1,48 +1,111 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 	<head>
+		<meta charset="utf-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+		<title>CUS</title>
+	  	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" 
+	  		integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" 
+	  		crossorigin="anonymous" />
+	  	<script src="http://code.jquery.com/jquery-3.3.1.min.js"
+	 		 integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+	  		crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" 
+			integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" 
+			crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" 
+			integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" 
+			crossorigin="anonymous"></script>
 		<style>
-			.label-input {
+			body {
+				background: url("http://localhost/cus-backend/img/sources/cus-background.jpg") no-repeat center center fixed; 
+			  	-webkit-background-size: cover;
+			  	-moz-background-size: cover;
+			  	-o-background-size: cover;
+			  	background-size: cover;
+			}
+			.col-sm-2 col-form-label {
 				width: 150px; 
 				display: inline-block;
 			}
 		</style>
 	</head>
 	<body>
-		<form method="POST" action="http://<%= domain %>/create-toko">
-			<div>
-				<div>
-					<label class="label-input" for="name">Name</label>
-					<input id="name" name="name" type="text" required />
+		<div class="container" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+			<form id="input-form" method="POST" action="http://<%= domain %>/create-toko" encType="multipart/form-data">
+				<div class="card border-info mb-3 text-center">
+				  <div class="card-header">
+				    Shop Input Form
+				  </div>
+				  <div class="card-body">
+					<div class="form-group row">
+						<label class="col-sm-2 col-form-label" for="name">Name</label>
+						<div class="col-sm-10">
+							<input id="name" class="form-control form-control-sm" name="name" type="text" placeholder="Ganesha Store" required />
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 col-form-label" for="name">Category</label>
+						<div class="col-sm-10">
+							<select id="category" class="form-control form-control-sm" name="category" type="text" placeholder="Ganesha Store" required>
+								 <option value="0" selected>Food and Beverages</option>
+								  <option value="1">Print and Stationary</option>
+							</select>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 col-form-label" for="address">Address</label>
+						<div class="col-sm-10">
+							<textarea id="address" class="form-control form-control-sm" name="address" placeholder="Jl. Trs. Tubagus Ismail No.17, Sekeloa, Coblong" required></textarea>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 col-form-label" for="description">Description</label>
+						<div class="col-sm-10">
+							<textarea id="description" class="form-control form-control-sm" placeholder="Sell all your needs" name="description"></textarea>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 col-form-label" for="open_at">Open At</label>
+						<div class="col-sm-10">
+							<input id="open_at" class="form-control form-control-sm" name="open_at" placeholder="08:00,08:00,08:00,08:00,08:00,09:00,10:00" type="text" required/>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 col-form-label" for="close_at">Close At</label>
+						<div class="col-sm-10">
+							<input id="close_at" class="form-control form-control-sm" name="close_at" placeholder="18:00,18:00,18:00,18:00,18:00,20:00,15:00" type="text" required/>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 col-form-label" for="latitude">Latitude</label>
+						<div class="col-sm-4">
+							<input id="latitude" class="form-control form-control-sm" name="latitude" placeholder="-6.983664" type="text" required/>
+						</div>
+						<label class="col-sm-2 col-form-label" for="longitude">Longitude</label>
+						<div class="col-sm-4">
+							<input id="longitude" class="form-control form-control-sm" name="longitude" placeholder="107.623624" type="text" required/>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 col-form-label" for="phone">Phone</label>
+						<div class="col-sm-10">
+							<input id="phone" class="form-control form-control-sm" name="phone" placeholder="021846256" type="text" required/>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 col-form-label" for="image">Image</label>
+						<div class="col-sm-10">
+							<input id="image" type="file" class="form-control form-control-sm" name="image" accept="image/*" />
+						</div>
+					</div>
+				  </div>
+				  <div class="card-footer text-muted">
+				  	<button type="submit" class="btn btn-primary">Submit</button>
+				  </div>
 				</div>
-				<div>
-					<label class="label-input" for="address">Address</label>
-					<textarea id="address" name="address" required></textarea>
-				</div>
-				<div>
-					<label class="label-input" for="description">Description</label>
-					<textarea id="description" name="description"></textarea>
-				</div>
-				<div>
-					<label class="label-input" for="open_at">Open At</label>
-					<input id="open_at" name="open_at" type="text" required/>
-				</div>
-				<div>
-					<label class="label-input" for="close_at">Close At</label>
-					<input id="close_at" name="close_at" type="text" required/>
-				</div>
-				<div>
-					<label class="label-input" for="latitude">Latitude</label>
-					<input id="latitude" name="latitude" type="text" required/>
-				</div>
-				<div>
-					<label class="label-input" for="longitude">Longitude</label>
-					<input id="longitude" name="longitude" type="text" required/>
-				</div>
-				<div>
-					<label class="label-input" for="phone">Phone</label>
-					<input id="phone" name="phone" type="text" required/>
-				</div>
-			<button type="submit">Submit</button>
-		</form>
+			</form>
+		</div>
 	</body>
 </html>
