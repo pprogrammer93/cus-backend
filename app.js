@@ -535,11 +535,7 @@ app.post("/create-account", (req, res) => {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
-	var t1 = req.body.login_type != null && req.body.password != null;
-	var t3 = req.body.login_type != null && req.body.password != null;
-	var t2 = (req.body.password_1 != null && req.body.password_2 != null)  || (req.body.login_type != null && req.body.password != null);
-	if(!(req.body.name && req.body.email && ((req.body.password_1 && req.body.password_2) || (req.body.login_type && req.body.password)))) {
-		console.log(t1 + " " + t2 + " " + t3);
+	if(!(req.body.name && req.body.email && req.body.password_1 && req.body.password_2)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
 	}
@@ -553,25 +549,17 @@ app.post("/create-account", (req, res) => {
 
 	user_id = 0;
 	con.query(select, (err, result) => {
-		console.log(req.body.email);
 		if(result.length != 0) {
 			res.send({error: {msg: 'failed: email has been exist'}, result: null});
 			logging("SQL_ERR: try to register existed email");
 			return;
 		}
-		if(req.body.password_1 != req.body.password_2 && !req.body.login_type) {
+		if(req.body.password_1 != req.body.password_2) {
 			res.send({error: {msg: 'password mismatch'}, result: null});
 			return;
 		}
 
-		var passHash;
-		if(req.body.login_type && req.body.login_type == "google") {
-			let pass = req.body.password;
-			pass = "google_" + pass;	
-			passHash = hash.generate(pass, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
-		} else {
-			passHash = hash.generate(req.body.password_1, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
-		}
+		var passHash = hash.generate(req.body.password_1, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
 
 		var name = "'" + req.body.name + "'";
 		var email = "'" + req.body.email + "'";
@@ -632,16 +620,14 @@ app.post("/verify", (req, res) => {
 			return;
 		}
 		if(result_1.length == 0) {
-			
 			if(req.body.login_type && req.body.login_type == "google") {
-				let pass = req.body.password;
-				pass = "google_" + pass;	
-				passHash = hash.generate(pass, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
+				var p = "google_" + req.body.password;
+				passHash = hash.generate(p, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
 				var name = "'" + req.body.name + "'";
 				var email = "'" + req.body.email + "'";
 				var phone = "'" + req.body.phone + "'";
-				var password = "'" + passHash + "'";
-				var sql = "INSERT INTO cus_user (name, email, phone, password) VALUES (" + name + "," + email + "," + phone + "," + password + ")";
+				var pass = "'" + passHash + "'";
+				var sql = "INSERT INTO cus_user (name, email, phone, password) VALUES (" + name + "," + email + "," + phone + "," + pass + ")";
 				
 				con.query(sql, (err, result) => {
 					if(err) {
@@ -677,7 +663,7 @@ app.post("/verify", (req, res) => {
 			return;
 		}
 		if(req.body.login_type && req.body.login_type == "google") {
-			password= "google_" + password;
+			password= "google_" + req.body.password;
 		} 
 		if(!hash.verify(password, result_1[0].password)) {
 			res.send({error: {msg: 'wrong password'}, result: null});
