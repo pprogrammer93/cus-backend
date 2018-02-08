@@ -81,14 +81,17 @@ app.get("/toko/:toko_id/register-item", (req, res) => {
 });
 
 app.get("/toko/:id", (req, res) => {
+	req.session.authorized = true;
 	res.render("toko.ejs", {id: req.params.id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY]});
 });
 
 app.get("/toko/:toko_id/item/:id", (req, res) => {
+	req.session.authorized = true;
 	res.render("item.ejs", {toko_id: req.params.toko_id, id: req.params.id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY]});
 });
 
 app.get("/payment/:transaction_id", (req, res) => {
+	req.session.authorized = true;
 	res.render("review.ejs", {id: req.params.transaction_id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY]});
 });
 
@@ -368,8 +371,6 @@ app.post("/create-toko", upload.single('image'), (req, res) => {
 		} else {
 			if(req.body.edit) {
 				res.redirect("toko/" + req.body.toko_id);
-				//res.render("toko.ejs", {id: req.body.toko_id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY]});
-				//res.send('<script type="text/javascript">window.location.href = "http://'+host[HOST_DOMAIN]+'/toko/'+req.body.toko_id+'"</script>');
 			} else {
 				fs.mkdir("img/item/" + result.insertId, (err) => {
 					if(err) {
@@ -626,7 +627,12 @@ app.post("/verify", (req, res) => {
 		}
 		if(result_1.length == 0) {
 			if(req.body.login_type && req.body.login_type == "google") {
-				res.redirect(307, "/create-account");
+				request
+					.post({url: 'http://end-point', headers: req.headers, body: req.body})
+					.on("response", function(response) {
+						res.send(response);
+					});
+  				processRequest(req);
 			} else {
 				res.send({error: {msg: 'user does not exist'}, result: null});
 			}
