@@ -48,8 +48,13 @@
 	</style>
 </head>
 <body>
+	<nav id="breadcrumb" aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+	    <li class="breadcrumb-item active" aria-current="page"><a href="http://<%= domain %>">Home</a></li>
+	  </ol>
+	</nav>
 	<div style="position: absolute; height: 100%; width: 100%;">
-		<div style="width: 60%; position: absolute; top: 5%; left: 50%; transform: translateX(-50%);">
+		<div style="width: 60%; position: absolute; left: 50%; transform: translateX(-50%);">
 			<div style="width: 100%; text-align: center;">
 				<h1>CUS</h1>
 			</div>
@@ -294,6 +299,10 @@
 
 		function goToItem(id) {
 			window.location.href = 'http://<%= domain %>/toko/<%= id %>/item/'+id;
+		}
+
+		function goToAddPage() {
+			window.location.href = 'http://<%= domain %>/toko/<%= id %>/register-item';
 		}
 	</script>
 </body>

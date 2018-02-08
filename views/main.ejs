@@ -184,6 +184,10 @@
 					limit: (maxItem+1)
 				}, 
 				function(result) {
+					if(result.error != null) {
+						console.log(result.error);
+						return;
+					}
 					result.result.forEach(function(item, index) {
 						if((index+1) == (maxItem+1)) {
 							set_pagination(false, "load_toko");
@@ -213,6 +217,10 @@
 					limit: (maxItem+1)	
 				},
 				function(result) {
+					if(result.error != null) {
+						console.log(result.error);
+						return;
+					}
 					result.result.forEach(function(item, index) {
 						if((index+1) == (maxItem+1)) {
 							set_pagination(false, "load_payment");

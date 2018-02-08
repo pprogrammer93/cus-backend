@@ -75,11 +75,6 @@ app.get("/register-user", (req, res) => {
 	res.render("register-user.ejs", {domain: host[HOST_DOMAIN]});
 });
 
-app.get("/register-item", (req, res) => {
-	req.session.authorized = true;
-	res.render("register-item-noid.ejs", {domain: host[HOST_DOMAIN]});
-});
-
 app.get("/toko/:toko_id/register-item", (req, res) => {
 	req.session.authorized = true;
 	res.render("register-item.ejs", {domain: host[HOST_DOMAIN], toko_id: req.params.toko_id, dir: host[HOST_DIR]});
@@ -538,9 +533,14 @@ app.post("/create-account", (req, res) => {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
-	if(!(req.body.name && req.body.email && req.body.phone && req.body.password_1 && req.body.password_2)) {
+	if(!(req.body.name && req.body.email && req.body.password_1 && req.body.password_2)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
+	}
+
+	var phone = "";
+	if(req.body.phone) {
+		phone = req.body.phone;
 	}
 
 	var select = "SELECT email FROM cus_user WHERE email=" + "'" + req.body.email + "'";
@@ -557,7 +557,15 @@ app.post("/create-account", (req, res) => {
 			return;
 		}
 
-		var passHash = hash.generate(req.body.password_1, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
+		var passHash;
+		if(req.body.login_type && req.body.login_type == "google") {
+			let pass = req.body.password_1;
+			pass = "google_" + pass;	
+			passHash = hash.generate(pass, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
+		} else {
+			passHash = hash.generate(req.body.password_1, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
+		}
+
 		var name = "'" + req.body.name + "'";
 		var email = "'" + req.body.email + "'";
 		var phone = "'" + req.body.phone + "'";
@@ -601,7 +609,15 @@ app.post("/verify", (req, res) => {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
-	if(!(req.body.email && req.body.password)) {
+
+	var password = null;
+	if(req.body.login_type && req.body.login_type == "google") {
+		password = req.body.password_1;
+	} else {
+		password = req.body.password;
+	}
+
+	if(!(req.body.email && password != null)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
 	}
@@ -614,10 +630,17 @@ app.post("/verify", (req, res) => {
 			return;
 		}
 		if(result_1.length == 0) {
-			res.send({error: {msg: 'user does not exist'}, result: null});
+			if(req.body.login_type && req.body.login_type == "google") {
+				res.redirect(307, "/create-account");
+			} else {
+				res.send({error: {msg: 'user does not exist'}, result: null});
+			}
 			return;
 		}
-		if(!hash.verify(req.body.password, result_1[0].password)) {
+		if(req.body.login_type && req.body.login_type == "google") {
+			password= "google_" + password;
+		} 
+		if(!hash.verify(password, result_1[0].password)) {
 			res.send({error: {msg: 'wrong password'}, result: null});
 			return;
 		}

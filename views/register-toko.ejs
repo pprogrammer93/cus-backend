@@ -32,7 +32,12 @@
 		</style>
 	</head>
 	<body>
-		<div class="container" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+		<nav id="breadcrumb" aria-label="breadcrumb">
+		  <ol class="breadcrumb">
+		    <li class="breadcrumb-item active" aria-current="page"><a href="http://<%= domain %>">Home</a></li>
+		  </ol>
+		</nav>
+		<div class="container">
 			<form id="input-form" method="POST" action="http://<%= domain %>/create-toko" encType="multipart/form-data">
 				<div class="card border-info mb-3 text-center">
 				  <div class="card-header">
