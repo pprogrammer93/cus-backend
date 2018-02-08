@@ -530,11 +530,16 @@ app.post("/purchase", (req, res) => {
 
 app.post("/create-account", (req, res) => {
 	logging("REQUEST/create-account: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+
 	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
+	var t1 = req.body.login_type != null && req.body.password != null;
+	var t3 = req.body.login_type != null && req.body.password != null;
+	var t2 = (req.body.password_1 != null && req.body.password_2 != null)  || (req.body.login_type != null && req.body.password != null);
 	if(!(req.body.name && req.body.email && ((req.body.password_1 && req.body.password_2) || (req.body.login_type && req.body.password)))) {
+		console.log(t1 + " " + t2 + " " + t3);
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
 	}
@@ -548,6 +553,7 @@ app.post("/create-account", (req, res) => {
 
 	user_id = 0;
 	con.query(select, (err, result) => {
+		console.log(req.body.email);
 		if(result.length != 0) {
 			res.send({error: {msg: 'failed: email has been exist'}, result: null});
 			logging("SQL_ERR: try to register existed email");
@@ -626,13 +632,45 @@ app.post("/verify", (req, res) => {
 			return;
 		}
 		if(result_1.length == 0) {
+			
 			if(req.body.login_type && req.body.login_type == "google") {
-				request
-					.post({url: 'http://end-point', headers: req.headers, body: req.body})
-					.on("response", function(response) {
-						res.send(response);
+				let pass = req.body.password;
+				pass = "google_" + pass;	
+				passHash = hash.generate(pass, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
+				var name = "'" + req.body.name + "'";
+				var email = "'" + req.body.email + "'";
+				var phone = "'" + req.body.phone + "'";
+				var password = "'" + passHash + "'";
+				var sql = "INSERT INTO cus_user (name, email, phone, password) VALUES (" + name + "," + email + "," + phone + "," + password + ")";
+				
+				con.query(sql, (err, result) => {
+					if(err) {
+						res.send({error: {msg: 'failed to store data'}, result: null});
+						logging("SQL_ERR/create_account-validate: " + err.code);
+						return;
+					}
+					sql = "SELECT id FROM cus_user WHERE email=" + "'" + req.body.email + "'";
+
+					con.query(sql, (err, result) => {
+						if(err) {
+							res.send({error: {msg: 'failed to store data'}, result: null});
+							logging("SQL_ERR/create_account-store: " + err.code);
+							return;
+						}
+						user_id = result[0].id;
+						res.send(
+							{
+								error: null, 
+								result: {
+									id: result[0].id, 
+									name: req.body.name, 
+									email: req.body.email, 
+									phone: req.body.phone,
+									favourite: []
+								}
+							});
 					});
-  				processRequest(req);
+				});
 			} else {
 				res.send({error: {msg: 'user does not exist'}, result: null});
 			}
