@@ -533,7 +533,7 @@ app.post("/create-account", (req, res) => {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
-	if(!(req.body.name && req.body.email && req.body.password_1 && req.body.password_2)) {
+	if(!(req.body.name && req.body.email && ((req.body.password_1 && req.body.password_2) || (req.body.login_type && req.body.password)))) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
 	}
@@ -552,14 +552,14 @@ app.post("/create-account", (req, res) => {
 			logging("SQL_ERR: try to register existed email");
 			return;
 		}
-		if(req.body.password_1 != req.body.password_2) {
+		if(req.body.password_1 != req.body.password_2 && !req.body.login_type) {
 			res.send({error: {msg: 'password mismatch'}, result: null});
 			return;
 		}
 
 		var passHash;
 		if(req.body.login_type && req.body.login_type == "google") {
-			let pass = req.body.password_1;
+			let pass = req.body.password;
 			pass = "google_" + pass;	
 			passHash = hash.generate(pass, {'algorithm': 'sha1', 'saltLength': 8, 'iterations': 1});
 		} else {
@@ -610,12 +610,7 @@ app.post("/verify", (req, res) => {
 		return;
 	}
 
-	var password = null;
-	if(req.body.login_type && req.body.login_type == "google") {
-		password = req.body.password_1;
-	} else {
-		password = req.body.password;
-	}
+	var password = req.body.password;
 
 	if(!(req.body.email && password != null)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
@@ -837,7 +832,6 @@ app.post("/payment/:transaction_id/confirm", (req, res) => {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
 	}
-	console.log(req.body.payment_id);
 	var replace = "UPDATE `cus_transaction` SET status=1 WHERE id=" + req.body.payment_id;
 	con.query(replace, (err, result) => {
 		if(err) {

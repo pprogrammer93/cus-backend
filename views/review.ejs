@@ -83,13 +83,15 @@
 	</style>
 </head>
 <body>
+	<div class="fixed-top">
+		<nav id="breadcrumb" aria-label="breadcrumb">
+		  <ol class="breadcrumb">
+		    <li class="breadcrumb-item active" aria-current="page"><a href="http://<%= domain %>">Home</a></li>
+		  </ol>
+		</nav>
+	</div>
 	<div style="position: absolute; height: 100%; width: 100%;">
-		<div style="width: 60%; position: absolute; top: 5%; left: 50%; transform: translateX(-50%);">
-			<nav id="breadcrumb" aria-label="breadcrumb">
-			  <ol class="breadcrumb">
-			    <li class="breadcrumb-item active" aria-current="page"><a href="http://<%= domain %>">Home</a></li>
-			  </ol>
-			</nav>
+		<div style="width: 60%; position: absolute; top: 50px; left: 50%; transform: translateX(-50%);">
 			<div style="width: 100%; text-align: center;">
 				<h1>CUS</h1>
 			</div>
