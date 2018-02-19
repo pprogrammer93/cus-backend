@@ -513,7 +513,7 @@ app.post("/purchase", (req, res) => {
 		} else {
 			var insert = "INSERT INTO cus_transaction (transaction_id, user_id, toko_id, item_id, item_quantity, total_price, created_at) " +
 				"VALUES ('"+transaction_id+"','"+req.body.user_id+"','"+item.toko_id+"','"+item.item_id+"','"+ 
-				"','"+item.item_quantity+"','"+item.total_price+"','"+created_at+"')";
+				+item.item_quantity+"','"+item.total_price+"','"+created_at+"')";
 			con.query(insert, (err, result) => {
 				if(err) {
 					logging("SQL_ERR/purchase: " + err.code + " for " + item);
