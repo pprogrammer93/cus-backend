@@ -62,12 +62,12 @@ app.listen(3000, () => {
 });
 
 app.get("/", (req, res) => {
-	res.render("main.ejs", {domain: host[HOST_DOMAIN], privilege: host[HOST_KEY]});
+	res.render("main.ejs", {domain: host[HOST_DOMAIN], privilege: host[HOST_KEY], dir: host[HOST_DIR]});
 });
 
 app.get("/register-toko", (req, res) => {
 	req.session.authorized = true;
-	res.render("register-toko.ejs", {domain: host[HOST_DOMAIN]});
+	res.render("register-toko.ejs", {domain: host[HOST_DOMAIN], dir: host[HOST_DIR]});
 });
 
 app.get("/register-user", (req, res) => {
@@ -82,17 +82,17 @@ app.get("/toko/:toko_id/register-item", (req, res) => {
 
 app.get("/toko/:id", (req, res) => {
 	req.session.authorized = true;
-	res.render("toko.ejs", {id: req.params.id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY]});
+	res.render("toko.ejs", {id: req.params.id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY], dir: host[HOST_DIR]});
 });
 
 app.get("/toko/:toko_id/item/:id", (req, res) => {
 	req.session.authorized = true;
-	res.render("item.ejs", {toko_id: req.params.toko_id, id: req.params.id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY]});
+	res.render("item.ejs", {toko_id: req.params.toko_id, id: req.params.id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY], dir: host[HOST_DIR]});
 });
 
 app.get("/payment/:transaction_id", (req, res) => {
 	req.session.authorized = true;
-	res.render("review.ejs", {id: req.params.transaction_id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY]});
+	res.render("review.ejs", {id: req.params.transaction_id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY], dir: host[HOST_DIR]});
 });
 
 app.post("/getToko", (req, res) => {
@@ -181,7 +181,7 @@ app.post("/toko/:toko_id/create-item",  upload.single('image'), (req, res) => {
 		var img_storage = "img/item/" + req.params.toko_id + "/" + img_id + "_" + img_name + "." + extension[1];
 		img_url = "http://" + host[HOST_DIR] + "/" + img_storage;
 
-		if(req.body.edit) {
+		if(req.body.edit && req.body.img_url != "") {
 			var old_img = req.body.img_url.substring(req.body.img_url.indexOf("img"), req.body.img_url.length);
 			fs.unlink(old_img, function (err) {
 				if(err) {
@@ -286,7 +286,7 @@ app.post("/create-toko", upload.single('image'), (req, res) => {
 		img_url = req.body.img_url;
 	}
 
-	if(req.file) {
+	if(req.file != null) {
 		var extension = req.file.originalname.split(".");
 		var filepath = "img/temp/" + req.file.filename;
 		var hrTime = process.hrtime();
@@ -299,16 +299,15 @@ app.post("/create-toko", upload.single('image'), (req, res) => {
 			var old_img = req.body.img_url.substring(req.body.img_url.indexOf("img"), req.body.img_url.length);
 			fs.unlink(old_img, function (err) {
 				if(err) {
-					logging("IMAGE/create_toko-insert: " + err.code + " " + result.insertId + " Need to erase image manually.");
-				} else {
-					fs.rename(filepath, img_storage, function (err) {
-					  if (err) {
-						res.send({error: {msg: 'failed to store image'}, result: null});
-						logging("IMAGE/create_toko-insert: " + err.code);
-						return;
-					  }
-					});
+					logging("IMAGE/create_toko-insert: " + err.code + " Need to erase image manually.");
 				}
+				fs.rename(filepath, img_storage, function (err) {
+				  if (err) {
+					res.send({error: {msg: 'failed to store image'}, result: null});
+					logging("IMAGE/create_toko-insert: " + err.code);
+					return;
+				  }
+				});
 			});
 		} else {
 			fs.rename(filepath, img_storage, function (err) {
@@ -386,7 +385,11 @@ app.post("/create-toko", upload.single('image'), (req, res) => {
 						return;
 					}
 				})
-				res.send({error: null, result: null});
+				if(req.body.web) {
+
+				} else {
+					res.send({error: null, result: null});
+				}
 			}
 		}
 	});
@@ -503,13 +506,13 @@ app.post("/purchase", (req, res) => {
 
 	item_list = req.body.item_list;
 	item_list.forEach((item, index) => {
-		if(!(item.toko_id && item.item_id && item.item_quantity && item.total_price)) {
+		if(!(item.toko_id && item.item_id && item.item_quantity && item.total_price && item.name)) {
 			item.msg = "lack of data";
 			pending_purchase.push(item);
 		} else {
-			var insert = "INSERT INTO cus_transaction (transaction_id, user_id, toko_id, item_id, item_quantity, total_price, created_at) " +
+			var insert = "INSERT INTO cus_transaction (transaction_id, user_id, toko_id, item_id, name, item_quantity, total_price, created_at) " +
 				"VALUES ('"+transaction_id+"','"+req.body.user_id+"','"+item.toko_id+"','"+item.item_id+"','"+ 
-				item.item_quantity+"','"+item.total_price+"','"+created_at+"')";
+				"','"+item.name+"','"+item.item_quantity+"','"+item.total_price+"','"+created_at+"')";
 			con.query(insert, (err, result) => {
 				if(err) {
 					logging("SQL_ERR/purchase: " + err.code + " for " + item);
