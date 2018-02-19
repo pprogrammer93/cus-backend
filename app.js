@@ -172,7 +172,7 @@ app.post("/toko/:toko_id/create-item",  upload.single('image'), (req, res) => {
 		img_url = req.body.img_url;
 	}
 
-	if(req.file) {
+	if(req.file != undefined) {
 		var extension = req.file.originalname.split(".");
 		var filepath = "img/temp/" + req.file.filename;
 		var hrTime = process.hrtime();
@@ -185,11 +185,10 @@ app.post("/toko/:toko_id/create-item",  upload.single('image'), (req, res) => {
 			var old_img = req.body.img_url.substring(req.body.img_url.indexOf("img"), req.body.img_url.length);
 			fs.unlink(old_img, function (err) {
 				if(err) {
-					logging("IMAGE/create_toko-insert: " + err.code + " " + result.insertId + " Need to erase image manually.");
+					logging("IMAGE/create_toko-insert: " + err.code + " Need to erase image manually.");
 				} else {
 					fs.rename(filepath, img_storage, function (err) {
 					  if (err) {
-						res.send({error: {msg: 'failed to store image'}, result: null});
 						logging("IMAGE/create_toko-insert: " + err.code);
 						return;
 					  }
@@ -199,7 +198,6 @@ app.post("/toko/:toko_id/create-item",  upload.single('image'), (req, res) => {
 		} else {
 			fs.rename(filepath, img_storage, function (err) {
 			  if (err) {
-				res.send({error: {msg: 'failed to store image'}, result: null});
 				logging("IMAGE/create_item-insert: " + err.code);
 			  } 
 			});
@@ -207,23 +205,23 @@ app.post("/toko/:toko_id/create-item",  upload.single('image'), (req, res) => {
 	} else {
 		if(req.body.edit) {
 			if(img_url != "") {
+				var toko_id = req.params.toko_id;
 				var start = img_url.substring(0, img_url.indexOf("item") + 5);
 				var domain = start.substring(0, start.indexOf("img"));
 				var dir = start.substring(start.indexOf("img"), start.length);
 
-				var end = img_url.substring(img_url.indexOf("item") + 5, img_url.length);
+				var end = img_url.substring(img_url.indexOf("item") + 6, img_url.length);
 				var extension = end.substring(end.indexOf(".") + 1, end.length);
 				var img_id = end.substring(end.indexOf("/")+1, end.indexOf("_"));
 
 				var old_name = end.substring(end.indexOf("_")+1, end.indexOf("."));
 				var img_name = req.body.name.replace(/ /g, '_');
-				var old_img = dir + req.params.toko_id + "/" + img_id + "_" + old_name + "." + extension;
-				var img_storage = dir + "/" + req.params.toko_id + "/" + img_id + "_" + img_name + "." + extension;
+				var old_img = dir + toko_id + "/" + img_id + "_" + old_name + "." + extension;
+				var img_storage = dir + "/" + toko_id + "/" + img_id + "_" + img_name + "." + extension;
 				img_url = domain + img_storage;
 
 				fs.rename(old_img, img_storage, function (err) {
 				  if (err) {
-					res.send({error: {msg: 'failed to store image'}, result: null});
 					logging("IMAGE/create_toko-insert: " + err.code + " " + old_img + " " + img_storage);
 					return;
 				  }
@@ -243,7 +241,6 @@ app.post("/toko/:toko_id/create-item",  upload.single('image'), (req, res) => {
 			"','" + img_url + "')";
 	}
 	
-
 	con.query(insert, (err, result) => {
 		if(err) {
 			res.send({error: {msg: 'failed to store data'}, result: null});
@@ -254,9 +251,11 @@ app.post("/toko/:toko_id/create-item",  upload.single('image'), (req, res) => {
 			return;
 		}
 		if(req.body.edit) {
-			res.redirect("toko/" + req.params.toko_id + "/item/" + req.body.item_id);
+			var page_toko = "http://" + host[HOST_DOMAIN] + "/" + "toko/" + req.params.toko_id + "/item/" + req.body.item_id;
+			res.redirect(page_toko);
+		} else {
+			res.send({error: null, result: null});
 		}
-		res.send({error: null, result: null});
 	});
 });
 
@@ -286,7 +285,7 @@ app.post("/create-toko", upload.single('image'), (req, res) => {
 		img_url = req.body.img_url;
 	}
 
-	if(req.file != null) {
+	if(req.file != undefined) {
 		var extension = req.file.originalname.split(".");
 		var filepath = "img/temp/" + req.file.filename;
 		var hrTime = process.hrtime();
@@ -303,7 +302,6 @@ app.post("/create-toko", upload.single('image'), (req, res) => {
 				}
 				fs.rename(filepath, img_storage, function (err) {
 				  if (err) {
-					res.send({error: {msg: 'failed to store image'}, result: null});
 					logging("IMAGE/create_toko-insert: " + err.code);
 					return;
 				  }
@@ -312,7 +310,6 @@ app.post("/create-toko", upload.single('image'), (req, res) => {
 		} else {
 			fs.rename(filepath, img_storage, function (err) {
 			  if (err) {
-				res.send({error: {msg: 'failed to store image'}, result: null});
 				logging("IMAGE/create_toko-insert: " + err.code);
 				return;
 			  }
@@ -337,7 +334,6 @@ app.post("/create-toko", upload.single('image'), (req, res) => {
 
 				fs.rename(old_img, img_storage, function (err) {
 				  if (err) {
-					res.send({error: {msg: 'failed to store image'}, result: null});
 					logging("IMAGE/create_toko-insert: " + err.code + " " + old_img + " " + img_storage);
 					return;
 				  }
@@ -369,7 +365,8 @@ app.post("/create-toko", upload.single('image'), (req, res) => {
 			return;
 		} else {
 			if(req.body.edit) {
-				res.redirect("toko/" + req.body.toko_id);
+				var page_toko = "http://" + host[HOST_DOMAIN] + "/" + "toko/" + req.body.toko_id;
+				res.redirect(page_toko);
 			} else {
 				fs.mkdir("img/item/" + result.insertId, (err) => {
 					if(err) {
