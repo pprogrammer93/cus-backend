@@ -80,6 +80,7 @@
   					  	<input id="img-url" type="hidden" name="img_url" /> 
 					  	<input id="edit-sign" type="hidden" name="edit" value="true" /> 
 					  	<input id="item-id" type="hidden" name="item_id" value="<%= id %>" />
+			  		  	<button id="button-delete" type="button" class="btn btn-danger" data-toggle="modal" data-target="#modal-delete">HAPUS</button>
 					  	<button type="submit" class="btn btn-primary">EDIT</button>
 					  </div>
 					</div>
@@ -87,22 +88,69 @@
 			</div>
 		</div>
 	</div>
+	<!-- Modal Delete -->
+	<div class="modal fade" id="modal-delete" tabindex="-1" role="dialog" aria-labelledby="modal-delete-label" aria-hidden="true">
+	  <div class="modal-dialog" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="modal-delete-label">Confirmation</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div id="delete-warning" class="modal-body">
+	 		
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+	        <form id="delete-form" method="POST" action="http://<%= domain %>/toko/<%= toko_id %>/item/<%= id %>/delete">
+	        	<button id="delete-button-confirmed" type="submit" class="btn btn-danger">HAPUS</button>
+	        </form>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<!-- End of Modal Delete -->
 
 	<script type="text/javascript">
 		$(document).ready(function() {
 			load_item(0);
 		});
+
+		var item_name = "";
+
+		$("#button-delete").on("click", function() {
+			$("#delete-warning").append("Anda akan menghapus data toko <b>" + item_name +"</b>. Apakah anda yakin ingin melanjutkan?");
+		});
+
+		var image_resize = function() {
+			var img_height = document.getElementById('image-show').naturalHeight;
+			var img_width = document.getElementById('image-show').naturalWidth;
+			var ratio = img_width/img_height;
+			if (img_height > img_width/2) {
+				var new_width = $("#main").outerWidth()/2 * ratio;
+				var margin_left = $("#main").outerWidth()/2 - new_width/2;
+				$("#image-show").css("width", new_width);
+				$("#image-show").css("margin-left", margin_left);
+			}
+			$("#image-show").css("height", $("#main").outerWidth()/2);
+		}
+		$("#image-show").on("load", image_resize);
+		$(window).on("resize", image_resize);
+		
 		function load_item() {
 			$.post("../../../getItemList", 
 				{
-					item_id: <%= id %>
+					item_id: <%= id %>,
+					toko_id: <%= toko_id %>
 				}, 
 				function(result) {
-					$("#name").val(result.result[0].name);
-					$("#price").val(result.result[0].price);
-					$("#description").html(result.result[0].description);
-					$("#image-show").attr("src", result.result[0].img_url);
-					$("#img-url").val(result.result[0].img_url);
+					item_name = result.result.list_items[0].name;
+					$("#name").val(result.result.list_items[0].name);
+					$("#price").val(result.result.list_items[0].price);
+					$("#description").html(result.result.list_items[0].description);
+					$("#image-show").attr("src", result.result.list_items[0].img_url);
+					$("#img-url").val(result.result.list_items[0].img_url);
 			    }
 			);
 		}

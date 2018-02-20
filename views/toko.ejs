@@ -56,7 +56,7 @@
 		</nav>
 	</div>
 	<div style="position: absolute; height: 100%; width: 100%;">
-		<div style="width: 60%; position: absolute; top: 50px; left: 50%; transform: translateX(-50%);">
+		<div id="main" style="width: 60%; position: absolute; top: 50px; left: 50%; transform: translateX(-50%);">
 			<div style="width: 100%; text-align: center;">
 				<h1>CUS</h1>
 			</div>
@@ -141,7 +141,8 @@
 					  	<input id="img-url" type="hidden" name="img_url" /> 
 					  	<input id="edit-sign" type="hidden" name="edit" value="true" /> 
 					  	<input id="toko-id" type="hidden" name="toko_id" value="<%= id %>" />
-					  	<button type="submit" class="btn btn-primary">EDIT</button>
+					  	<button id="button-delete" type="button" class="btn btn-danger" data-toggle="modal" data-target="#modal-delete">HAPUS</button>
+					  	<button type="submit" class="btn btn-primary">UBAH</button>
 					  </div>
 					</div>
 				</form>
@@ -157,16 +158,208 @@
 		</div>
 	</div>
 
+	<!-- Modal -->
+	<div class="modal fade" id="input-time" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="exampleModalLabel">Time</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body">
+	      	<div class="form-group row">
+				<label class="col-sm-4 col-form-label" for="at_senin">Senin</label>
+				<div class="col-sm-8">
+					<input id="at_senin" class="time-validate form-control form-control-sm" name="at_senin" type="text" data-title="invalid" data-trigger="manual"/>
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label" for="at_selasa">Selasa</label>
+				<div class="col-sm-8">
+					<input id="at_selasa" class="time-validate form-control form-control-sm" name="at_selasa" type="text" data-title="invalid" data-trigger="manual"/>
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label" for="at_rabu">Rabu</label>
+				<div class="col-sm-8">
+					<input id="at_rabu" class="time-validate form-control form-control-sm" name="at_rabu" type="text" data-title="invalid" data-trigger="manual"/>
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label" for="at_kamis">Kamis</label>
+				<div class="col-sm-8">
+					<input id="at_kamis" class="time-validate form-control form-control-sm" name="at_kamis" type="text" data-title="invalid" data-trigger="manual"/>
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label" for="at_jumat">Jumat</label>
+				<div class="col-sm-8">
+					<input id="at_jumat" class="time-validate form-control form-control-sm" name="at_jumat" type="text" data-title="invalid" data-trigger="manual"/>
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label" for="at_sabtu">Sabtu</label>
+				<div class="col-sm-8">
+					<input id="at_sabtu" class="time-validate form-control form-control-sm" name="at_sabtu" type="text" data-title="invalid" data-trigger="manual"/>
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label" for="at_minggu">Minggu</label>
+				<div class="col-sm-8">
+					<input id="at_minggu" class="time-validate form-control form-control-sm" name="at_minggu" type="text" data-title="invalid" data-trigger="manual"/>
+				</div>
+			</div>
+	      </div>
+	      <div class="modal-footer">
+	        <button id="button-cancel-time" type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+	        <button id="button-save-time" type="button" class="btn btn-primary">Simpan</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<!-- End of Modal -->
+	<!-- Modal Delete -->
+	<div class="modal fade" id="modal-delete" tabindex="-1" role="dialog" aria-labelledby="modal-delete-label" aria-hidden="true">
+	  <div class="modal-dialog" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="modal-delete-label">Confirmation</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div id="delete-warning" class="modal-body">
+	 		
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+	        <form id="delete-form" method="POST" action="http://<%= domain %>/toko/<%= id %>/delete">
+	        	<button id="delete-button-confirmed" type="submit" class="btn btn-danger">HAPUS</button>
+	        </form>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<!-- End of Modal Delete -->
+
 	<script type="text/javascript">
 		const MENU_EDIT = 0;
 		const MENU_ITEM  = 1;
 
 		var menuState = MENU_EDIT;
+		var save_time_disabled = 0;
+		var toko_name = "";
 
 		$(document).ready(function() {
 			$("#pagination").addClass("gone");
 			$("#search").addClass("gone");
 		});
+
+		$("#button-delete").on("click", function() {
+			$("#delete-warning").append("Anda akan menghapus data toko <b>" + toko_name +"</b>. Apakah anda yakin ingin melanjutkan?");
+		});
+
+		var image_resize = function() {
+			var img_height = document.getElementById('image-show').naturalHeight;
+			var img_width = document.getElementById('image-show').naturalWidth;
+			var ratio = img_width/img_height;
+			if (img_height > img_width/2) {
+				var new_width = $("#main").outerWidth()/2 * ratio;
+				var margin_left = $("#main").outerWidth()/2 - new_width/2;
+				$("#image-show").css("width", new_width);
+				$("#image-show").css("margin-left", margin_left);
+			}
+			$("#image-show").css("height", $("#main").outerWidth()/2);
+		}
+
+		$("#image-show").on("load", image_resize);
+		$(window).on("resize", image_resize);
+
+		$("#open_at").on("focus", function() {
+			prepareModal($("#open_at").val());
+			$("#button-save-time").attr("onclick", "setText('open')");
+			$("#input-time").modal("show");
+		});
+		$("#close_at").on("focus", function() {
+			prepareModal($("#close_at").val());
+			$("#button-save-time").attr("onclick", "setText('close')");
+			$("#input-time").modal("show");
+		});
+		$(".time-validate").on("input", function() {
+			if ($(this).val().trim().length != 5) {
+				toggle_time_save($(this), true);
+			} else {
+				var s = $(this).val().split(":");
+				if (s.length != 2 || isNaN(Number(s[0])) || isNaN(Number(s[1]))) {
+					toggle_time_save($(this), true);
+				} else {
+					toggle_time_save($(this), false);
+				}
+			}
+		});
+		$("#button-cancel-time").on("click", function() {
+			ids = ["#at_senin", "#at_selasa", "#at_rabu", "#at_kamis", "#at_jumat", "#at_sabtu", "#at_minggu"];
+			ids.forEach((id, index) => {
+				toggle_time_save($(id), false);
+				$(id).removeAttr("data-save");
+				$(id).tooltip("hide");
+			});
+		});
+
+		function toggle_time_save(obj, isDisabled) {
+			if (isDisabled) {
+				if (obj.attr("data-save") == undefined) {
+					obj.tooltip("show");
+					obj.attr("data-save", "disbled");
+					save_time_disabled++;
+				}
+			} else {
+				if (obj.attr("data-save") != undefined) {
+					obj.tooltip("hide");
+					obj.removeAttr("data-save");
+					save_time_disabled--;
+				}
+			}
+		}
+
+		function setText(type) {
+			if (save_time_disabled != 0) {
+				return;
+			}
+
+			t_senin = $("#at_senin").val().trim();
+			t_selasa = $("#at_selasa").val().trim();
+			t_rabu = $("#at_rabu").val().trim();
+			t_kamis = $("#at_kamis").val().trim();
+			t_jumat = $("#at_jumat").val().trim();
+			t_sabtu = $("#at_sabtu").val().trim();
+			t_minggu = $("#at_minggu").val().trim();
+
+			t = t_senin + "," + t_selasa + "," + t_rabu + "," + t_kamis + "," + t_jumat +
+				"," + t_sabtu + "," + t_minggu;
+
+			var id;
+			if (type == "open") {
+				id = "#open_at";
+			} else if (type == "close") {
+				id = "#close_at";
+			}
+			$(id).val(t);
+			$("#input-time").modal("hide");
+		}
+
+		function prepareModal(times) {
+			time = times.split(",");
+			$("#at_senin").val(time[0]);
+			$("#at_selasa").val(time[1]);
+			$("#at_rabu").val(time[2]);
+			$("#at_kamis").val(time[3]);
+			$("#at_jumat").val(time[4]);
+			$("#at_sabtu").val(time[5]);
+			$("#at_minggu").val(time[6]);
+		}
 
 		function switch_class(element, oldClass, newClass) {
 			$(element).removeClass(oldClass);
@@ -185,6 +378,7 @@
 				switch_class("#item", "menu-active", "menu-inactive");
 				$("#input-form").removeClass("gone");
 				$("#pagination").addClass("gone");
+				$("#search").addClass("gone");
 			}
 			menuState = menu;
 			$("#search").val("");
@@ -221,12 +415,17 @@
 					toko_id: <%= id %>
 				}, 
 				function(result) {
+					toko_name = result.result[0].name;
 					$("#name").val(result.result[0].name);
 					$("#category").val(result.result[0].category);
 					$("#address").html(result.result[0].address);
 					$("#description").html(result.result[0].description);
-					$("#open_at").val(result.result[0].open_at);
-					$("#close_at").val(result.result[0].close_at);
+					if ($("#open_at").val() == "") {
+						$("#open_at").val(result.result[0].open_at);
+					}
+					if ($("#close_at").val() == "") {
+						$("#close_at").val(result.result[0].close_at);
+					}
 					$("#latitude").val(result.result[0].latitude);
 					$("#longitude").val(result.result[0].longitude);
 					$("#phone").val(result.result[0].phone);
@@ -247,7 +446,8 @@
 					limit: (maxItem+1)	
 				},
 				function(result) {
-					result.result.forEach(function(item, index) {
+					console.log(result.result);
+					result.result.list_items.forEach(function(item, index) {
 						if((index+1) == (maxItem+1)) {
 							set_pagination(false, "load_item");
 						} else {

@@ -199,7 +199,7 @@
 						if((index+1) == (maxItem+1)) {
 							set_pagination(false, "load_toko");
 						} else {
-							$("#result").append(createFrameToko(item.id, item.name, item.address, item.description));
+							$("#result").append(createFrameToko(item.id, item.name, item.address.substring(0, 27) + "...", item.description.substring(0, 27) + "..."));
 							if((index+1) == result.result.length) {
 								set_pagination(true, "load_toko");
 							}

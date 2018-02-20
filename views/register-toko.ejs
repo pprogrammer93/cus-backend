@@ -112,5 +112,171 @@
 				</div>
 			</form>
 		</div>
+		<!-- Modal -->
+		<div class="modal fade" id="input-time" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		  <div class="modal-dialog" role="document">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <h5 class="modal-title" id="exampleModalLabel">Time</h5>
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		          <span aria-hidden="true">&times;</span>
+		        </button>
+		      </div>
+		      <div class="modal-body">
+		      	<div class="form-group row">
+					<label class="col-sm-4 col-form-label" for="at_senin">Senin</label>
+					<div class="col-sm-8">
+						<input id="at_senin" class="time-validate form-control form-control-sm" name="at_senin" type="text" data-container="body" data-placement="top" data-title="invalid" data-trigger="manual"/>
+					</div>
+				</div>
+				<div class="form-group row">
+					<label class="col-sm-4 col-form-label" for="at_selasa">Selasa</label>
+					<div class="col-sm-8">
+						<input id="at_selasa" class="time-validate form-control form-control-sm" name="at_selasa" type="text" data-placement="top" data-title="invalid" data-trigger="manual"/>
+					</div>
+				</div>
+				<div class="form-group row">
+					<label class="col-sm-4 col-form-label" for="at_rabu">Rabu</label>
+					<div class="col-sm-8">
+						<input id="at_rabu" class="time-validate form-control form-control-sm" name="at_rabu" type="text" data-placement="top" data-title="invalid" data-trigger="manual"/>
+					</div>
+				</div>
+				<div class="form-group row">
+					<label class="col-sm-4 col-form-label" for="at_kamis">Kamis</label>
+					<div class="col-sm-8">
+						<input id="at_kamis" class="time-validate form-control form-control-sm" name="at_kamis" type="text" data-placement="top" data-title="invalid" data-trigger="manual"/>
+					</div>
+				</div>
+				<div class="form-group row">
+					<label class="col-sm-4 col-form-label" for="at_jumat">Jumat</label>
+					<div class="col-sm-8">
+						<input id="at_jumat" class="time-validate form-control form-control-sm" name="at_jumat" type="text" data-placement="top" data-title="invalid" data-trigger="manual"/>
+					</div>
+				</div>
+				<div class="form-group row">
+					<label class="col-sm-4 col-form-label" for="at_sabtu">Sabtu</label>
+					<div class="col-sm-8">
+						<input id="at_sabtu" class="time-validate form-control form-control-sm" name="at_sabtu" type="text" data-placement="top" data-title="invalid" data-trigger="manual"/>
+					</div>
+				</div>
+				<div class="form-group row">
+					<label class="col-sm-4 col-form-label" for="at_minggu">Minggu</label>
+					<div class="col-sm-8">
+						<input id="at_minggu" class="time-validate form-control form-control-sm" name="at_minggu" type="text" data-placement="top" data-title="invalid" data-trigger="manual"/>
+					</div>
+				</div>
+		      </div>
+		      <div class="modal-footer">
+		        <button id="button-cancel-time" type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+		        <button id="button-save-time" type="button" class="btn btn-primary">Simpan</button>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+		<!-- End of Modal -->
+		<script type="text/javascript">
+			$("#open_at").on("focus", function() {
+				prepareModal($("#open_at").val());
+				$("#button-save-time").attr("onclick", "setText('open')");
+				$("#input-time").modal("show");
+			});
+			$("#close_at").on("focus", function() {
+				prepareModal($("#close_at").val());
+				$("#button-save-time").attr("onclick", "setText('close')");
+				$("#input-time").modal("show");
+			});
+
+			function toggle_time_save(obj, isDisabled) {
+				if (isDisabled) {
+					if (obj.attr("data-save") == undefined) {
+						obj.tooltip("show");
+						obj.attr("data-save", "disbled");
+					}
+				} else {
+					if (obj.attr("data-save") != undefined) {
+						obj.tooltip("hide");
+						obj.removeAttr("data-save");
+					}
+				}
+			}
+
+			$(".time-validate").on("input", function() {
+				if ($(this).val().trim().length != 5) {
+					toggle_time_save($(this), true);
+				} else {
+					var s = $(this).val().split(":");
+					if (s.length != 2 || isNaN(Number(s[0])) || isNaN(Number(s[1]))) {
+						toggle_time_save($(this), true);
+					} else {
+						toggle_time_save($(this), false);
+					}
+				}
+			});
+			$("#button-cancel-time").on("click", function() {
+				ids = ["#at_senin", "#at_selasa", "#at_rabu", "#at_kamis", "#at_jumat", "#at_sabtu", "#at_minggu"];
+				ids.forEach((id, index) => {
+					$(id).removeAttr("data-save");
+					$(id).tooltip("hide");
+				});
+			});
+
+			function setText(type) {
+				t_senin = $("#at_senin").val().trim();
+				t_selasa = $("#at_selasa").val().trim();
+				t_rabu = $("#at_rabu").val().trim();
+				t_kamis = $("#at_kamis").val().trim();
+				t_jumat = $("#at_jumat").val().trim();
+				t_sabtu = $("#at_sabtu").val().trim();
+				t_minggu = $("#at_minggu").val().trim();
+
+				time = [t_senin, t_selasa, t_rabu, t_kamis, t_jumat, t_sabtu, t_minggu];
+				ids = ["#at_senin", "#at_selasa", "#at_rabu", "#at_kamis", "#at_jumat", "#at_sabtu", "#at_minggu"];
+
+				i = 0;
+				f = 0;
+				time.forEach((t, index) => {
+					if (t.trim().length != 5) {
+						toggle_time_save($(ids[index]), true);
+						f++;
+					} else {
+						var s = t.split(":");
+						if (s.length != 2 || isNaN(Number(s[0])) || isNaN(Number(s[1]))) {
+							toggle_time_save($(ids[index]), true);
+							f++;
+						} else {
+							$(ids[index]).val(t);
+						}
+					}
+					i++;
+				});
+
+				for (i; i < ids.length; ++i) {
+					toggle_time_save($(ids[i]), true);
+					f++;
+				}
+
+				if (f == 0) {
+					t = t_senin + "," + t_selasa + "," + t_rabu + "," + t_kamis + "," + t_jumat +
+						"," + t_sabtu + "," + t_minggu;
+
+					var id;
+					if (type == "open") {
+						id = "#open_at";
+					} else if (type == "close") {
+						id = "#close_at";
+					}
+					$(id).val(t);
+					$("#input-time").modal("hide");
+				}
+			}
+
+			function prepareModal(times) {
+				time = times.split(",");
+				ids = ["#at_senin", "#at_selasa", "#at_rabu", "#at_kamis", "#at_jumat", "#at_sabtu", "#at_minggu"];
+				time.forEach((t, index) => {
+					$(ids[index]).val(t);
+				});
+			}
+		</script>
 	</body>
 </html>

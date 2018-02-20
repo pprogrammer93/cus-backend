@@ -8,6 +8,7 @@ var MySQLStore = require('express-mysql-session');
 var path = require('path');
 var multer  = require('multer');
 var upload = multer({ dest: 'img/temp/' });
+var fse = require('fs-extra');
 
 const HOST_HOST = 0;
 const HOST_USER = 1;
@@ -402,6 +403,109 @@ app.post("/create-toko", upload.single('image'), (req, res) => {
 	});
 });
 
+app.post("/toko/:id/delete", (req, res) => {
+	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
+		res.send({error: {msg: 'unauthorized'}, result: null});
+		return;
+	}
+
+	var select = "SELECT img_url FROM `cus_toko` WHERE id='" + req.params.id + "'";
+	con.query(select, (err, result) => {
+		if(!err) {
+			if (result[0].img_url != "") {
+				img_url = result[0].img_url;
+				img_storage = img_url.substring(img_url.indexOf("img"), img_url.length);
+				fs.unlink(img_storage, (err) => {
+					if(err) {
+						logging("IMAGE/delete-toko: " + err.code + " Need to erase image manually.");
+					}
+				});
+			}
+			var img_items = "img/item/" + req.params.id;
+			fse.remove(img_items, (err) => {
+				if (err) {
+					logging("IMAGE/delete-toko: " + err.code + " Need to erase folder " + img_items + " manually.");
+				}
+			});
+			var del = "DELETE FROM `cus_toko` WHERE id='" + req.params.id + "'";
+			con.query(del, (err, result) => {
+					if(err) {
+						res.send({error: {msg: 'failed to delete data toko'}, result: null});
+						logging("SQL_ERR/delete-toko: " + err.code);
+					} else {
+						select = "SELECT id FROM `cus_item` WHERE toko_id='" + req.params.id + "'";
+						con.query(select, (err, ids) => {
+							if(err) {
+								logging("SQL_ERR/delete-toko: " + err.code);
+							} else {
+								ids.forEach((id, index) => {
+									del = "DELETE FROM `cus_favourite` WHERE item_id='" + id + "'";
+									con.query(del, (err, result) => {
+										if(err) {
+											logging("SQL_ERR/delete-toko: " + err.code);
+										}
+									})
+								});
+							}
+						});
+						del = "DELETE FROM `cus_item` WHERE toko_id='" + req.params.id + "'";
+						con.query(del, (err, result) => {
+							if(err) {
+								logging("SQL_ERR/delete-toko: " + err.code);
+							}
+						}); 
+						res.send({error: null, result: null});
+					}
+				});
+		} else {
+			res.send({error: {msg: 'failed to retrieve img_url'}, result: null});
+			logging("SQL_ERR/delete-toko: " + err.code);
+		}
+	});
+});
+
+app.post("/toko/:toko_id/item/:id/delete", (req, res) => {
+	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
+		res.send({error: {msg: 'unauthorized'}, result: null});
+		return;
+	}
+
+	var select = "SELECT img_url FROM `cus_item` WHERE id='" + req.params.id + "'";
+	con.query(select, (err, result) => {
+		if(err) {
+			res.send({error: {msg: 'failed to retrieve img_url'}, result: null});
+			logging("SQL_ERR/delete-item: " + err.code);
+		} else {
+			if (result[0].img_url != "") {
+				var img_url = result[0].img_url;
+				var img_storage = img_url.substring(img_url.indexOf("img"), img_url.length);
+				fs.unlink(img_storage, (err) => {
+					if(err) {
+						logging("IMAGE/delete-item: " + err.code + " Need to erase image manually.");
+					}
+				});
+			}
+			var del = "DELETE FROM `cus_item` WHERE id='" + req.params.id + "'";
+			con.query(del, (err, result) => {
+				if(err) {
+					res.send({error: {msg: 'failed to delete data item'}, result: null});
+					logging("SQL_ERR/delete-item: " + err.code);
+				} else {
+					del = "DELETE FROM `cus_favourite` WHERE item_id='" + req.params.id + "'";
+					con.query(del, (err, result) => {
+						if(err) {
+							res.send({error: {msg: 'failed to delete data favourite'}, result: null});
+							logging("SQL_ERR/delete-item: " + err.code + " " + del);
+						} else {
+							res.send({error: null, result: null});
+						}
+					});
+				}
+			});
+		}
+	});
+});
+
 app.post("/edit-account", (req,res) => {
 	logging("REQUEST/edit-account: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
@@ -772,7 +876,7 @@ app.post("/getItemList", (req, res) => {
 			"id='" + req.body.item_id + "'";
 	} else {
 		sql = "SELECT id, name, price, img_url, description FROM `cus_item` WHERE " + 
-			"id='" + req.body.toko_id + "'";
+			"toko_id='" + req.body.toko_id + "'";
 	}
 	
 	if(req.body.search && req.body.search != "") {
@@ -791,8 +895,8 @@ app.post("/getItemList", (req, res) => {
 			sql = "SELECT open_at, close_at FROM `cus_toko` WHERE id='" + req.body.toko_id + "'";
 			con.query(sql, (err, place) => {
 				if(!err) {
-					open_at = getTodayTime(place[0].open_at);
-					close_at = getTodayTime(place[0].close_at);
+					var open_at = getTodayTime(place[0].open_at);
+					var close_at = getTodayTime(place[0].close_at);
 					is_close = true;
 					if (isOperationTime(timeToJSON(open_at), timeToJSON(close_at))) {
 						is_close = false;
