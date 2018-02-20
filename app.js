@@ -497,7 +497,7 @@ app.post("/purchase", (req, res) => {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
-	if(!req.body.user_id) {
+	if(!(req.body.user_id && req.body.estimation_hour && req.body.estimation_minute)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
 	}
@@ -510,6 +510,8 @@ app.post("/purchase", (req, res) => {
 	var transaction_id = hrTime[0].toString() + hrTime[1].toString();
 	var time = new Date();
 	var created_at = time.getDate() + "-" + (time.getMonth() + 1) + "-" + time.getFullYear() + "-" + time.getHours() + ":" + time.getMinutes(); 
+	var estimation = formatTime(req.body.estimation_hour, req.body.estimation_minute);
+	console.log(estimation);
 
 	item_list = req.body.item_list;
 	item_list.forEach((item, index) => {
@@ -517,9 +519,9 @@ app.post("/purchase", (req, res) => {
 			item.msg = "lack of data";
 			pending_purchase.push(item);
 		} else {
-			var insert = "INSERT INTO cus_transaction (transaction_id, user_id, toko_id, item_id, name, item_quantity, total_price, created_at) " +
+			var insert = "INSERT INTO cus_transaction (transaction_id, user_id, toko_id, item_id, name, item_quantity, total_price, created_at, estimation) " +
 				"VALUES ('"+transaction_id+"','"+req.body.user_id+"','"+item.toko_id+"','"+item.item_id+"','"+ 
-				item.name+"','"+item.item_quantity+"','"+item.total_price+"','"+created_at+"')";
+				item.name+"','"+item.item_quantity+"','"+item.total_price+"','"+created_at+"','"+estimation+"')";
 			con.query(insert, (err, result) => {
 				if(err) {
 					logging("SQL_ERR/purchase: " + err.code + " for " + item);
@@ -734,6 +736,17 @@ app.post("/place", (req, res) => {
 
 	con.query(sql, (err, result) => {
 		if(!err) {
+			result.forEach((item, index) => {
+				open_at = getTodayTime(result[index].open_at);
+				close_at = getTodayTime(result[index].close_at);
+				result[index].open_at = open_at;
+				result[index].close_at = close_at;
+				if (isOperationTime(timeToJSON(open_at), timeToJSON(close_at))) {
+					result[index].is_close = false;
+				} else {
+					result[index].is_close = true;
+				}
+			});
 			res.send({error: null, result});
 		} else {
 			res.send({error: {msg: 'failed to acquire data'}, result: null});
@@ -917,8 +930,7 @@ app.post("/getHistory", (req, res) => {
 			select += " GROUP BY transaction_id";
 		}
 	} else {
-		select = "SELECT transaction_id, toko_id, item_id, item_quantity, total_price, created_at, status FROM " +
-			"`cus_transaction`";
+		select = "SELECT * FROM " + "`cus_transaction` WHERE user_id='" + req.body.user_id + "'";
 		if(req.body.transaction_id) {
 			select += " AND transaction_id='" + req.body.transaction_id + "'";
 		}
@@ -935,9 +947,33 @@ app.post("/getHistory", (req, res) => {
 
 	}
 
+	history_list = [];
+	result_size = 0;
 	con.query(select, (err, result) => {
 		if(!err) {
-			res.send({error: null, result: result});
+			if (!(req.body.privilege == host[HOST_KEY])) {	
+				result_size = result.length;		
+				result.forEach((transaksi, index) => {
+					console.log("Transaksi " + index);
+					select = "SELECT name, address, phone, latitude, longitude FROM `cus_toko`" + 
+						" WHERE id='" + transaksi.toko_id + "'";
+					con.query(select, (err, place) => {
+						if(!err) {
+							transaksi['toko'] = place;
+							history_list.push(transaksi);
+							console.log("Place " + history_list.length);
+							if (history_list.length == result_size) {
+								res.send({error: null, result: history_list});
+							}
+						} else {
+							res.send({error: {msg: 'failed to retrieve data'}, result: null});
+							logging("SQL_ERR/getHistory: " + err.code + " " + select);
+						}
+					});
+				});
+			} else {
+				res.send({error: null, result: result});
+			}
 		} else {
 			res.send({error: {msg: 'failed to retrieve data'}, result: null});
 			logging("SQL_ERR/getHistory: " + err.code + " " + select);
@@ -961,6 +997,62 @@ function logging(message) {
 	fs.appendFile('log.dat', message+"\n", function (err) {
 	  if (err) throw err;
 	});
+}
+
+function formatTime(iHour, iMin) {
+	if (iHour >= 10) {
+		sHour = iHour.toString();
+	} else {
+		sHour = "0" + iHour.toString();
+	}
+	if (iMin >= 10) {
+		sMin = iMin.toString();
+	} else {
+		sMin = "0" + iMin.toString();
+	}
+	return sHour + ":" + sMin;
+}
+
+function getTodayTime(time) {
+	t = time.split(",");
+	d = ((new Date()).getDay() - 1) % 7;
+	return t[d];
+}
+
+function isOperationTime(open, close) {
+	if (open == close) {
+		return false;
+	}
+	date = new Date();
+	h = date.getHours();
+	m = date.getMinutes();
+
+	open_h = open.hours;
+	open_m = open.minutes;
+
+	close = minusMinute(close, 30);
+	close_h = close.hours;
+	close_m = close.minutes;
+
+	if ((open_h < h || (open_h == h && open_m <= m)) &&
+		(close_h > h || (close_h == h && close_m > m))) {
+	}
+
+}
+
+function minusMinute(time, minus) {
+	time.minutes = time.minutes - minus;
+	if (time.minutes < 0) {
+		time.hours = time.hours - 1;
+	}
+	time.minutes = time.minutes % 60;
+	return time;
+}
+
+function timeToJSON(time) {
+	t = time.split(":");
+	json = {hours: t[0], minutes: t[1]};
+	return json;
 }
 
 /*
