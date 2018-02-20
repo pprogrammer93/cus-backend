@@ -511,7 +511,6 @@ app.post("/purchase", (req, res) => {
 	var time = new Date();
 	var created_at = time.getDate() + "-" + (time.getMonth() + 1) + "-" + time.getFullYear() + "-" + time.getHours() + ":" + time.getMinutes(); 
 	var estimation = formatTime(req.body.estimation_hour, req.body.estimation_minute);
-	console.log(estimation);
 
 	item_list = req.body.item_list;
 	item_list.forEach((item, index) => {
@@ -710,29 +709,34 @@ app.post("/place", (req, res) => {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
-	if(!(req.body.category && req.body.latitude && req.body.longitude)) {
-		res.send({error: {msg: 'lack of parameter'}, result: null});
-		return;
-	}
+	if(!(req.body.toko_id)) {
+		if(!(req.body.category && req.body.latitude && req.body.longitude)) {
+			res.send({error: {msg: 'lack of parameter'}, result: null});
+			return;
+		}
 
-	if(!req.body.low_rad) {
-		low_rad = 0;
+		if(!req.body.low_rad) {
+			low_rad = 0;
+		} else {
+			low_rad = req.body.low_rad;
+		}
+		if(!req.body.high_rad) {
+			high_rad = 1000;
+		} else {
+			high_rad = req.body.high_rad;
+		}
+		var sql = "SELECT id, name, img_url, address, description, open_at, close_at, latitude, longitude, phone FROM `cus_toko` WHERE " +
+			"category='" + req.body.category + "' AND " +
+			"SQRT(" + 
+			"(latitude-" + req.body.latitude + ")*(latitude-" + req.body.latitude + ")+" + 
+			"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.longitude + "))" + 
+			" BETWEEN " + low_rad + " AND " + high_rad +
+			" ORDER BY SQRT((latitude-" + req.body.longitude + ")*(latitude-" + req.body.latitude + ")+" + 
+			"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.latitude + ")) ASC";
 	} else {
-		low_rad = req.body.low_rad;
+		var sql = "SELECT id, name, img_url, address, description, open_at, close_at, latitude, longitude, phone FROM `cus_toko` WHERE " +
+			"id=" + req.body.toko_id;
 	}
-	if(!req.body.high_rad) {
-		high_rad = 1000;
-	} else {
-		high_rad = req.body.high_rad;
-	}
-	var sql = "SELECT id, name, img_url, address, description, open_at, close_at, latitude, longitude, phone FROM `cus_toko` WHERE " +
-		"category='" + req.body.category + "' AND " +
-		"SQRT(" + 
-		"(latitude-" + req.body.latitude + ")*(latitude-" + req.body.latitude + ")+" + 
-		"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.longitude + "))" + 
-		" BETWEEN " + low_rad + " AND " + high_rad +
-		" ORDER BY SQRT((latitude-" + req.body.longitude + ")*(latitude-" + req.body.latitude + ")+" + 
-		"(longitude-" + req.body.longitude + ")*(longitude-" + req.body.latitude + ")) ASC";
 
 	con.query(sql, (err, result) => {
 		if(!err) {
@@ -768,7 +772,7 @@ app.post("/getItemList", (req, res) => {
 			"id='" + req.body.item_id + "'";
 	} else {
 		sql = "SELECT id, name, price, img_url, description FROM `cus_item` WHERE " + 
-			"toko_id='" + req.body.toko_id + "'";
+			"id='" + req.body.toko_id + "'";
 	}
 	
 	if(req.body.search && req.body.search != "") {
@@ -782,9 +786,24 @@ app.post("/getItemList", (req, res) => {
 		}
 	}
 
-	con.query(sql, (err, result) => {
+	con.query(sql, (err, list_items) => {
 		if(!err) {
-			res.send({error: null, result});
+			sql = "SELECT open_at, close_at FROM `cus_toko` WHERE id='" + req.body.toko_id + "'";
+			con.query(sql, (err, place) => {
+				if(!err) {
+					open_at = getTodayTime(place[0].open_at);
+					close_at = getTodayTime(place[0].close_at);
+					is_close = true;
+					if (isOperationTime(timeToJSON(open_at), timeToJSON(close_at))) {
+						is_close = false;
+					}
+					result = {list_items: list_items, is_close: is_close};
+					res.send({error: null, result});
+				} else {
+					res.send({error: {msg: 'failed to acquire data'}, result: null});
+					logging("SQL_ERR/item: " + err.code + " " + sql);
+				}
+			});
 		} else {
 			res.send({error: {msg: 'failed to acquire data'}, result: null});
 			logging("SQL_ERR/item: " + err.code + " " + sql);
@@ -896,6 +915,23 @@ app.post("/payment/:transaction_id/confirm", (req, res) => {
 	});
 }); 
 
+app.post("/payment/:transaction_id/rate", (req, res) => {
+	logging("REQUEST/payment-rate: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	if(!(req.body.rating)) {
+		res.send({error: {msg: 'lack of parameter'}, result: null});
+		return;
+	}
+	var replace = "UPDATE `cus_transaction` SET status=2, rating=" + req.body.rating + " WHERE transaction_id=" + req.params.transaction_id;
+	con.query(replace, (err, result) => {
+		if(!err) {
+			res.send({error: null, result: null});
+		} else {
+			res.send({error: {msg: 'failed to give rating'}, result: null});
+			logging("SQL_ERR/payment-rate: " + err.code + " " + replace);
+		}
+	});
+});
+
 app.post("/getHistory", (req, res) => {
 	logging("REQUEST/getHistory: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(req.headers.authorization != host[HOST_KEY] && req.body.privilege != host[HOST_KEY]) {
@@ -954,14 +990,12 @@ app.post("/getHistory", (req, res) => {
 			if (!(req.body.privilege == host[HOST_KEY])) {	
 				result_size = result.length;		
 				result.forEach((transaksi, index) => {
-					console.log("Transaksi " + index);
 					select = "SELECT name, address, phone, latitude, longitude FROM `cus_toko`" + 
 						" WHERE id='" + transaksi.toko_id + "'";
 					con.query(select, (err, place) => {
 						if(!err) {
 							transaksi['toko'] = place;
 							history_list.push(transaksi);
-							console.log("Place " + history_list.length);
 							if (history_list.length == result_size) {
 								res.send({error: null, result: history_list});
 							}
