@@ -58,7 +58,13 @@ app.use(session({
 }));
 
 app.listen(3000, () => {
-	console.log("Server On!");
+	fs.writeFile("log.dat", "", (err) => {
+		if(err) {
+			console.log("Something wrong!");
+		} else {
+			console.log("Server On!");
+		}
+	});
 });
 
 app.get("/", (req, res) => {
