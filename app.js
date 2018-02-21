@@ -455,7 +455,8 @@ app.post("/toko/:id/delete", (req, res) => {
 								logging("SQL_ERR/delete-toko: " + err.code);
 							}
 						}); 
-						res.send({error: null, result: null});
+						var page_toko = "http://" + host[HOST_DOMAIN];
+						res.redirect(page_toko);
 					}
 				});
 		} else {
