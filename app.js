@@ -69,7 +69,7 @@ app.listen(3000, () => {
 });
 
 app.get("/", (req, res) => {
-	res.render("main.ejs", {domain: host[HOST_DOMAIN], privilege: host[HOST_KEY], dir: host[HOST_DIR]});
+	res.render("main.ejs", {domain: host[HOST_DOMAIN], dir: host[HOST_DIR]});
 });
 
 app.get("/register-toko", (req, res) => {
@@ -89,17 +89,17 @@ app.get("/toko/:toko_id/register-item", (req, res) => {
 
 app.get("/toko/:id", (req, res) => {
 	req.session.authorized = true;
-	res.render("toko.ejs", {id: req.params.id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY], dir: host[HOST_DIR]});
+	res.render("toko.ejs", {id: req.params.id, domain: host[HOST_DOMAIN], dir: host[HOST_DIR]});
 });
 
 app.get("/toko/:toko_id/item/:id", (req, res) => {
 	req.session.authorized = true;
-	res.render("item.ejs", {toko_id: req.params.toko_id, id: req.params.id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY], dir: host[HOST_DIR]});
+	res.render("item.ejs", {toko_id: req.params.toko_id, id: req.params.id, domain: host[HOST_DOMAIN], dir: host[HOST_DIR]});
 });
 
 app.get("/payment/:transaction_id", (req, res) => {
 	req.session.authorized = true;
-	res.render("review.ejs", {id: req.params.transaction_id, domain: host[HOST_DOMAIN], privilege: host[HOST_KEY], dir: host[HOST_DIR]});
+	res.render("review.ejs", {id: req.params.transaction_id, domain: host[HOST_DOMAIN], dir: host[HOST_DIR]});
 });
 
 app.post("/getToko", (req, res) => {
@@ -1038,7 +1038,7 @@ app.post("/payment/:transaction_id/rate", (req, res) => {
 
 app.post("/getHistory", (req, res) => {
 	logging("REQUEST/getHistory: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization != host[HOST_KEY] && req.body.privilege != host[HOST_KEY]) {
+	if(req.headers.authorization != host[HOST_KEY]) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
@@ -1048,7 +1048,7 @@ app.post("/getHistory", (req, res) => {
 	}
 
 	var select;
-	if(req.body.privilege == host[HOST_KEY]) {
+	if(req.session.authorized == host[HOST_KEY]) {
 		if(req.body.payment) {
 			select = "SELECT id, name, item_quantity, total_price, status FROM `cus_transaction` " +
 				"WHERE transaction_id=" + req.body.transaction_id;
@@ -1087,27 +1087,67 @@ app.post("/getHistory", (req, res) => {
 
 	}
 
-	history_list = [];
-	result_size = 0;
+	var history_list = [];
+	var result_size = 0;
 	con.query(select, (err, result) => {
 		if(!err) {
 			if (!(req.body.privilege == host[HOST_KEY])) {	
 				result_size = result.length;		
+				var currentTokoId = -1;
+
+				var transaction_list = [];
+				var currentTransactionId = "0";
+				var currentTransactionData = {};
+				var counter = -1;
+				var place_counter = 0;
+				var items_counter = 0;
+				var send_triggered = false;
 				result.forEach((transaksi, index) => {
-					select = "SELECT name, address, phone, latitude, longitude FROM `cus_toko`" + 
-						" WHERE id='" + transaksi.toko_id + "'";
-					con.query(select, (err, place) => {
-						if(!err) {
-							transaksi['toko'] = place;
-							history_list.push(transaksi);
-							if (history_list.length == result_size) {
-								res.send({error: null, result: history_list});
-							}
-						} else {
-							res.send({error: {msg: 'failed to retrieve data'}, result: null});
-							logging("SQL_ERR/getHistory: " + err.code + " " + select);
+					if (currentTransactionId != transaksi.transaction_id) {
+						counter++;
+						currentTransactionId = transaksi.transaction_id;
+						currentTransactionData = {
+							transaction_id: transaksi.transaction_id,
+							created_at: transaksi.created_at, 
+							status: transaksi.status, 
+							estimation: transaksi.estimation,
+							rating: transaksi.rating,
+							toko: null,
+							list_items: []
 						}
-					});
+						transaction_list.push(currentTransactionData);
+
+						var c = counter;
+						select = "SELECT name, address, phone, latitude, longitude FROM `cus_toko`" + 
+							" WHERE id='" + transaksi.toko_id + "'";
+						con.query(select, (err, place) => {
+							if(!err) {
+								transaction_list[c]['toko'] = place;
+								place_counter++;
+								if ((items_counter == result.length) && (place_counter == transaction_list.length) && (send_triggered == false)) {
+									send_triggered = true;
+									res.send({error: null, result: transaction_list});
+								}
+							} else {
+								res.send({error: {msg: 'failed to retrieve data'}, result: null});
+								logging("SQL_ERR/getHistory: " + err.code + " " + select);
+							}
+						});
+					}
+
+					var item = {
+						id: transaksi.item_id, 
+						name: transaksi.name, 
+						quantity: transaksi.item_quantity, 
+						price: transaksi.total_price
+					};
+					transaction_list[counter].list_items.push(item);
+					items_counter++;
+
+					if ((items_counter == result.length) && (place_counter == transaction_list.length) && (send_triggered == false)) {
+						send_triggered = true;
+						res.send({error: null, result: transaction_list});
+					}
 				});
 			} else {
 				res.send({error: null, result: result});
