@@ -283,7 +283,7 @@
 			var color;
 			if(status == 0) {
 				color = "waiting"
-			} else if(status == 1) {
+			} else if(status >= 1) {
 				color = "completed";
 			}
 			return  '<div class="card" onclick="goToPayment('+transaction_id+')">'+

@@ -69,6 +69,7 @@ app.listen(3000, () => {
 });
 
 app.get("/", (req, res) => {
+	req.session.authorized = true;
 	res.render("main.ejs", {domain: host[HOST_DOMAIN], dir: host[HOST_DIR]});
 });
 
@@ -157,7 +158,7 @@ app.post("/getToko", (req, res) => {
 
 app.post("/toko/:toko_id/create-item",  upload.single('image'), (req, res) => {
 	logging("REQUEST/create-item: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
+	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
@@ -271,7 +272,7 @@ app.post("/toko/:toko_id/create-item",  upload.single('image'), (req, res) => {
 
 app.post("/create-toko", upload.single('image'), (req, res) => {
 	logging("REQUEST/create-toko: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
+	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
@@ -404,7 +405,7 @@ app.post("/create-toko", upload.single('image'), (req, res) => {
 });
 
 app.post("/toko/:id/delete", (req, res) => {
-	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
+	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
@@ -465,7 +466,7 @@ app.post("/toko/:id/delete", (req, res) => {
 });
 
 app.post("/toko/:toko_id/item/:id/delete", (req, res) => {
-	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
+	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
@@ -508,7 +509,7 @@ app.post("/toko/:toko_id/item/:id/delete", (req, res) => {
 
 app.post("/edit-account", (req,res) => {
 	logging("REQUEST/edit-account: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
+	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
@@ -597,7 +598,7 @@ app.post("/edit-account", (req,res) => {
 
 app.post("/purchase", (req, res) => {
 	logging("REQUEST/edit-account: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
+	if(req.headers.authorization != host[HOST_KEY]) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
@@ -645,8 +646,7 @@ app.post("/purchase", (req, res) => {
 
 app.post("/create-account", (req, res) => {
 	logging("REQUEST/create-account: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-
-	if(!req.headers.authorization == host[HOST_KEY] || req.session.authorized == false) {
+	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
@@ -1038,7 +1038,7 @@ app.post("/payment/:transaction_id/rate", (req, res) => {
 
 app.post("/getHistory", (req, res) => {
 	logging("REQUEST/getHistory: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization != host[HOST_KEY]) {
+	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
 		return;
 	}
@@ -1048,7 +1048,7 @@ app.post("/getHistory", (req, res) => {
 	}
 
 	var select;
-	if(req.session.authorized == host[HOST_KEY]) {
+	if(req.session.authorized != undefined) {
 		if(req.body.payment) {
 			select = "SELECT id, name, item_quantity, total_price, status FROM `cus_transaction` " +
 				"WHERE transaction_id=" + req.body.transaction_id;
@@ -1091,7 +1091,7 @@ app.post("/getHistory", (req, res) => {
 	var result_size = 0;
 	con.query(select, (err, result) => {
 		if(!err) {
-			if (!(req.body.privilege == host[HOST_KEY])) {	
+			if (req.session.authorized == undefined) {	
 				result_size = result.length;		
 				var currentTokoId = -1;
 

@@ -149,7 +149,7 @@
 						ids.push(item.id);
 						$("#result").append(createFrameOrder(item.name, item.item_quantity, (item.total_price/item.item_quantity), item.total_price));
 						if((index + 1) == result.result.length) {
-							if(item.status == 1) {
+							if(item.status >= 1) {
 								$("#submit").prop("disabled", true);
 							}
 						}
