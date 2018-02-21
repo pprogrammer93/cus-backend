@@ -261,7 +261,7 @@ app.post("/toko/:toko_id/create-item",  upload.single('image'), (req, res) => {
 		if(req.body.edit) {
 			var page_toko = "http://" + host[HOST_DOMAIN] + "/" + "toko/" + req.params.toko_id + "/item/" + req.body.item_id;
 			res.redirect(page_toko);
-		} else if (req.body.web) {
+		} else if (req.session.authorized != undefined) {
 			var page_toko = "http://" + host[HOST_DOMAIN] + "/" + "toko/" + req.params.toko_id;
 			res.redirect(page_toko);
 		} else {
@@ -499,7 +499,8 @@ app.post("/toko/:toko_id/item/:id/delete", (req, res) => {
 							res.send({error: {msg: 'failed to delete data favourite'}, result: null});
 							logging("SQL_ERR/delete-item: " + err.code + " " + del);
 						} else {
-							res.send({error: null, result: null});
+							var page_toko = "http://" + host[HOST_DOMAIN] + /toko/ + req.params.toko_id;
+							res.redirect(page_toko);
 						}
 					});
 				}
