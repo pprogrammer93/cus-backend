@@ -1185,15 +1185,16 @@ app.get("/getFAQ", (req, res) => {
 
 app.post("/edit-faq", (req, res) => {
 	logging("REQUEST/edit-faq: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	var answer = req.body.answer.replace(/'/g, "&#39");
 	if (req.body.id == -1) {
-		var sql = "INSERT INTO `cus_faq` (question, answer) VALUES ('" + req.body.question + "','" + req.body.answer + "')";
+		var sql = "INSERT INTO `cus_faq` (question, answer) VALUES ('" + req.body.question + "','" + answer + "')";
 	} else {
-		var sql = "UPDATE `cus_faq` SET answer='" + req.body.answer + "' WHERE id=" + req.body.id;
+		var sql = "UPDATE `cus_faq` SET answer='" + answer + "' WHERE id=" + req.body.id;
 	}
 	con.query(sql, (err, result) => {
 		if(err) {
 			res.send({error: {msg: 'failed to update or insert data'}, result: null});
-			logging("SQL_ERR/edit-faq: " + err.code);
+			logging("SQL_ERR/edit-faq: " + err.code + " " + sql);
 		} else {
 			var page = "http://" + host[HOST_DOMAIN] + "/faq";
 			res.redirect(page);

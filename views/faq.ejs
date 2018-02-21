@@ -130,7 +130,7 @@
 					$("#input-question").attr("type", "text");
 					$("#faq-id").val("-1");
 				} else {
-					$("#answer").val(answers[value]);
+					$("#answer").val(answers[value].replace(/&#39/g, "'"));
 					$("#button-delete").prop("disabled", false);
 					$("#delete-form").attr("action", "http://<%= domain %>/faq/" + ids[value] + "/delete");
 					$("#input-question").attr("type", "hidden");
