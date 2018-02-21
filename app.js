@@ -1174,8 +1174,9 @@ function isOperationTime(open, close) {
 
 	if ((open_h < h || (open_h == h && open_m <= m)) &&
 		(close_h > h || (close_h == h && close_m > m))) {
+		return true;
 	}
-
+	return false;
 }
 
 function minusMinute(time, minus) {
