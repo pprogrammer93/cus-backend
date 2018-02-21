@@ -103,6 +103,11 @@ app.get("/payment/:transaction_id", (req, res) => {
 	res.render("review.ejs", {id: req.params.transaction_id, domain: host[HOST_DOMAIN], dir: host[HOST_DIR]});
 });
 
+app.get("/faq", (req, res) => {
+	req.session.authorized = true;
+	res.render("faq.ejs", {domain: host[HOST_DOMAIN], dir: host[HOST_DIR]});
+});
+
 app.post("/getToko", (req, res) => {
 	logging("REQUEST/getToko: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 
@@ -259,11 +264,11 @@ app.post("/toko/:toko_id/create-item",  upload.single('image'), (req, res) => {
 			return;
 		}
 		if(req.body.edit) {
-			var page_toko = "http://" + host[HOST_DOMAIN] + "/" + "toko/" + req.params.toko_id + "/item/" + req.body.item_id;
-			res.redirect(page_toko);
+			var page = "http://" + host[HOST_DOMAIN] + "/" + "toko/" + req.params.toko_id + "/item/" + req.body.item_id;
+			res.redirect(pageo);
 		} else if (req.session.authorized != undefined) {
-			var page_toko = "http://" + host[HOST_DOMAIN] + "/" + "toko/" + req.params.toko_id;
-			res.redirect(page_toko);
+			var page = "http://" + host[HOST_DOMAIN] + "/" + "toko/" + req.params.toko_id;
+			res.redirect(page);
 		} else {
 			res.send({error: null, result: null});
 		}
@@ -376,8 +381,8 @@ app.post("/create-toko", upload.single('image'), (req, res) => {
 			return;
 		} else {
 			if(req.body.edit) {
-				var page_toko = "http://" + host[HOST_DOMAIN] + "/" + "toko/" + req.body.toko_id;
-				res.redirect(page_toko);
+				var page = "http://" + host[HOST_DOMAIN] + "/" + "toko/" + req.body.toko_id;
+				res.redirect(page);
 			} else {
 				fs.mkdir("img/item/" + result.insertId, (err) => {
 					if(err) {
@@ -394,8 +399,8 @@ app.post("/create-toko", upload.single('image'), (req, res) => {
 					}
 				})
 				if(req.body.web) {
-					var page_toko = "http://" + host[HOST_DOMAIN];
-					res.redirect(page_toko);
+					var page = "http://" + host[HOST_DOMAIN];
+					res.redirect(page);
 				} else {
 					res.send({error: null, result: null});
 				}
@@ -455,8 +460,8 @@ app.post("/toko/:id/delete", (req, res) => {
 								logging("SQL_ERR/delete-toko: " + err.code);
 							}
 						}); 
-						var page_toko = "http://" + host[HOST_DOMAIN];
-						res.redirect(page_toko);
+						var page = "http://" + host[HOST_DOMAIN];
+						res.redirect(page);
 					}
 				});
 		} else {
@@ -499,8 +504,8 @@ app.post("/toko/:toko_id/item/:id/delete", (req, res) => {
 							res.send({error: {msg: 'failed to delete data favourite'}, result: null});
 							logging("SQL_ERR/delete-item: " + err.code + " " + del);
 						} else {
-							var page_toko = "http://" + host[HOST_DOMAIN] + /toko/ + req.params.toko_id;
-							res.redirect(page_toko);
+							var page = "http://" + host[HOST_DOMAIN] + /toko/ + req.params.toko_id;
+							res.redirect(page);
 						}
 					});
 				}
@@ -1162,14 +1167,51 @@ app.post("/getHistory", (req, res) => {
 });
 
 app.get("/getFAQ", (req, res) => {
-	var select = "SELECT question, answer FROM cus_faq";
+	if (req.session.authorized == undefined) {
+		var select = "SELECT question, answer FROM cus_faq";
+	} else {
+		var select = "SELECT id, question, answer FROM cus_faq";
+	}
+	
 	con.query(select, (err, result) => {
 		if(err) {
 			res.send({error: {msg: 'failed to retrieve data'}, result: null});
 			logging("SQL_ERR/getFAQ: " + err.code);
-			return;
+		} else {
+			res.send({error: null, result: result});
 		}
-		res.send({error: null, result: result});
+	});
+});
+
+app.post("/edit-faq", (req, res) => {
+	logging("REQUEST/edit-faq: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	if (req.body.id == -1) {
+		var sql = "INSERT INTO `cus_faq` (question, answer) VALUES ('" + req.body.question + "','" + req.body.answer + "')";
+	} else {
+		var sql = "UPDATE `cus_faq` SET answer='" + req.body.answer + "' WHERE id=" + req.body.id;
+	}
+	con.query(sql, (err, result) => {
+		if(err) {
+			res.send({error: {msg: 'failed to update or insert data'}, result: null});
+			logging("SQL_ERR/edit-faq: " + err.code);
+		} else {
+			var page = "http://" + host[HOST_DOMAIN] + "/faq";
+			res.redirect(page);
+		}
+	});
+});
+
+app.post("/faq/:id/delete", (req, res) => {
+	logging("REQUEST/faq-delete: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	var del = "DELETE FROM `cus_faq` WHERE id=" + req.params.id;
+	con.query(del, (err, result) => {
+		if(err) {
+			res.send({error: {msg: 'failed to delete data'}, result: null});
+			logging("SQL_ERR/faq-delete: " + err.code);
+		} else {
+			var page = "http://" + host[HOST_DOMAIN] + "/faq";
+			res.redirect(page);
+		}
 	});
 });
 

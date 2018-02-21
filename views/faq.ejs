@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+		<title>CUS</title>
+	  	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" 
+	  		integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" 
+	  		crossorigin="anonymous" />
+	  	<script src="http://code.jquery.com/jquery-3.3.1.min.js"
+	 		 integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+	  		crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" 
+			integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" 
+			crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" 
+			integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" 
+			crossorigin="anonymous"></script>
+		<style>
+			body {
+				background: url("http://<%= dir %>/img/sources/cus-background.jpg") no-repeat center center fixed; 
+			  	-webkit-background-size: cover;
+			  	-moz-background-size: cover;
+			  	-o-background-size: cover;
+			  	background-size: cover;
+			}
+			.col-sm-2 col-form-label {
+				width: 150px; 
+				display: inline-block;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+			<form id="input-form" method="POST" action="http://<%= domain %>/edit-faq">
+				<nav id="breadcrumb" aria-label="breadcrumb">
+				  <ol class="breadcrumb">
+				    <li class="breadcrumb-item active" aria-current="page"><a href="http://<%= domain %>">Home</a></li>
+				  </ol>
+				</nav>
+				<div class="card border-info mb-3 text-center">
+				  <div class="card-header">
+				    FAQ
+				  </div>
+				  <div class="card-body">
+			  		<div class="form-group row">
+						<label class="col-sm-2 col-form-label" for="question">Question</label>
+						<div class="col-sm-10">
+							<select id="question" class="form-control form-control-sm" type="text" required>
+								<option value="0" selected>New</option>
+							</select>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 col-form-label" for="input-question"></label>
+						<div class="col-sm-10">
+							<input id="input-question" class="form-control form-control-sm" name="question" type="text" required />
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 col-form-label" for="answer">Answer</label>
+						<div class="col-sm-10">
+							<textarea id="answer" class="form-control form-control-sm" name="answer" rows="10"></textarea>
+						</div>
+					</div>
+				  </div>
+				  <div class="card-footer text-muted">
+				  	<button id="button-delete" type="button" class="btn btn-danger" data-toggle="modal" data-target="#modal-delete" disabled="true">Hapus</button>
+				  	<button name="web" type="submit" class="btn btn-primary">Simpan</button>
+				  	<input id="faq-id" name="id" type="hidden" value="-1"/>
+				  </div>
+				</div>
+			</form>
+		</div>
+		<!-- Modal Delete -->
+		<div class="modal fade" id="modal-delete" tabindex="-1" role="dialog" aria-labelledby="modal-delete-label" aria-hidden="true">
+		  <div class="modal-dialog" role="document">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <h5 class="modal-title" id="modal-delete-label">Confirmation</h5>
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		          <span aria-hidden="true">&times;</span>
+		        </button>
+		      </div>
+		      <div id="delete-warning" class="modal-body">
+		 		
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+		        <form id="delete-form" method="POST" action="http://<%= domain %>/faq/:id/delete">
+		        	<button id="delete-button-confirmed" type="submit" class="btn btn-danger">HAPUS</button>
+		        </form>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+		<!-- End of Modal Delete -->
+		
+		<script type="text/javascript">
+			var answers = [];
+			var ids = [];
+
+			$("#button-delete").on("click", function() {
+				$("#delete-warning").html('Anda akan menghapus pertanyaan "<b>' + $("#question option:selected").text() +'</b>". Apakah anda yakin ingin melanjutkan?');
+			});
+
+			$(document).ready(function() {
+				$.ajax({
+					method: "GET",
+					url: "/getFAQ",
+					success: function(data) {
+						var result = data.result;
+						result.forEach((qa, index) => {
+							$("#question").append('<option value="' + (index + 1) + '">' + qa.question + '</option>');
+							ids.push(qa.id);
+							console.log(qa.id);
+							answers.push(qa.answer);
+						});
+					},
+					dataType: "json"
+				});
+			});
+
+			$("#question").on("change", function() {
+				var value = $("#question").val() - 1;
+				if (value < 0) {
+					$("#answer").val(" ");
+					$("#button-delete").prop("disabled", true);
+					$("#input-question").attr("type", "text");
+					$("#faq-id").val("-1");
+				} else {
+					$("#answer").val(answers[value]);
+					$("#button-delete").prop("disabled", false);
+					$("#delete-form").attr("action", "http://<%= domain %>/faq/" + ids[value] + "/delete");
+					$("#input-question").attr("type", "hidden");
+					$("#input-question").val(null);
+					$("#faq-id").val(ids[value]);
+				}
+			});
+
+		</script>
+	</body>
+</html>

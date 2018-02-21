@@ -103,6 +103,9 @@
 					<div id="pembayaran" class="col menu-inactive" onclick="change_menu(1)" style="background: white; padding: 7px; text-align: center;">
 						<span style="cursor: pointer;">Pembayaran</span>
 					</div>
+					<div id="faq" class="col menu-inactive" onclick="change_menu(2)" style="background: white; padding: 7px; text-align: center;">
+						<span style="cursor: pointer;">FAQ</span>
+					</div>
 				</div>
 			</div>
 			<div style="position: relative; width: 100%; height: 50px;">
@@ -126,6 +129,7 @@
 	<script type="text/javascript">
 		const MENU_TOKO = 0;
 		const MENU_PEMBAYARAN  = 1;
+		const MENU_FAQ = 2;
 
 		var menuState = MENU_TOKO;
 
@@ -151,6 +155,8 @@
 				switch_class("#search", "search-pembayaran", "search-toko");
 				switch_class("#search-option", "option-pembayaran", "option-toko");
 				$("#search-option").disabled = true;
+			} else if(menu == MENU_FAQ) {
+				window.location.href = 'http://<%= domain %>/faq';
 			}
 			menuState = menu;
 			$("#search").val("");
