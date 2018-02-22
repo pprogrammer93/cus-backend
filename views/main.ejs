@@ -315,8 +315,10 @@
 			var btnMid;
 			if(load_function == "load_payment") {
 				btnMid = "";
-			} else {
+			} else if(load_function == "load_toko") {
 				btnMid = '<button type="button" class="btn btn-warning" onclick="goToAddPage()">NEW</button>';
+			} else if(load_function == "load_user") {
+				btnMid = "";
 			}
 			btnLeft = '<button type="button" class="btn btn-secondary" onclick="'+load_function+'('+(page-1)+')" '+disableLeft+'> < </button>';
 			btnRight = '<button type="button" class="btn btn-secondary" onclick="'+load_function+'('+(page+1)+')" '+disableRight+'> > </button>';
