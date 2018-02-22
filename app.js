@@ -265,7 +265,7 @@ app.post("/toko/:toko_id/create-item",  upload.single('image'), (req, res) => {
 		}
 		if(req.body.edit) {
 			var page = "http://" + host[HOST_DOMAIN] + "/" + "toko/" + req.params.toko_id + "/item/" + req.body.item_id;
-			res.redirect(pageo);
+			res.redirect(page);
 		} else if (req.session.authorized != undefined) {
 			var page = "http://" + host[HOST_DOMAIN] + "/" + "toko/" + req.params.toko_id;
 			res.redirect(page);
