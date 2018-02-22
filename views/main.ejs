@@ -285,7 +285,7 @@
 							} else {
 								phone = item.phone;
 							}
-							$("#result").append(createFrameToko(item.id, item.name, item.email, phone));
+							$("#result").append(createFrameUser(item.id, item.name, item.email, phone));
 							if((index+1) == result.result.length) {
 								set_pagination(true, "load_user");
 							}
@@ -352,7 +352,15 @@
 					'</div>';
 		}
 
-
+		function createFrameUser(id, name, email, phone) {
+			return  '<div class="card">'+
+					'  <div style="padding: 10px;" class="card-body">'+
+					'    <h5 class="card-title">'+name+'</h5>'+
+					'    <p style="font-size: 0.8em" class="card-subtitle mb-2 text-muted">'+email+'</p>'+
+					'    <p style="font-size: 0.75em" class="card-text">'+phone+'</p>'+
+					'  </div>'+
+					'</div>';
+		}
 
 		function goToAddPage() {
 			window.location.href = 'http://<%= domain %>/register-toko';
