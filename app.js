@@ -175,7 +175,7 @@ app.post("/get-user", (req, res) => {
 	if(req.body.search) {
 		sql = "SELECT id, name, email, phone FROM `cus_user`" +
 			" WHERE name LIKE '%" + req.body.search + "%' OR email LIKE '%" +
-			req.body.search + "%' phone LIKE '%" + req.body.search + "%' ORDER BY id DESC LIMIT " + req.body.offset + ", " + limit;
+			req.body.search + "%' OR phone LIKE '%" + req.body.search + "%' ORDER BY id DESC LIMIT " + req.body.offset + ", " + limit;
 	} else {
 		sql = "SELECT id, name, email, phone FROM `cus_user`" +
 				" ORDER BY id DESC LIMIT " + req.body.offset + ", " + limit;
