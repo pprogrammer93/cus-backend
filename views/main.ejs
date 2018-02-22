@@ -103,7 +103,10 @@
 					<div id="pembayaran" class="col menu-inactive" onclick="change_menu(1)" style="background: white; padding: 7px; text-align: center;">
 						<span style="cursor: pointer;">Pembayaran</span>
 					</div>
-					<div id="faq" class="col menu-inactive" onclick="change_menu(2)" style="background: white; padding: 7px; text-align: center;">
+					<div id="user" class="col menu-inactive" onclick="change_menu(2)" style="background: white; padding: 7px; text-align: center;">
+						<span style="cursor: pointer;">User</span>
+					</div>
+					<div id="faq" class="col menu-inactive" onclick="change_menu(3)" style="background: white; padding: 7px; text-align: center;">
 						<span style="cursor: pointer;">FAQ</span>
 					</div>
 				</div>
@@ -129,7 +132,8 @@
 	<script type="text/javascript">
 		const MENU_TOKO = 0;
 		const MENU_PEMBAYARAN  = 1;
-		const MENU_FAQ = 2;
+		const MENU_USER = 2;
+		const MENU_FAQ = 3;
 
 		var menuState = MENU_TOKO;
 
@@ -143,21 +147,30 @@
 		}
 
 		function change_menu(menu) {
-			if(menu == MENU_PEMBAYARAN && menuState == MENU_TOKO) {
+			if(menuState == MENU_TOKO) {
 				switch_class("#toko", "menu-active", "menu-inactive");
-				switch_class("#pembayaran", "menu-inactive", "menu-active");
-				switch_class("#search", "search-toko", "search-pembayaran");
-				switch_class("#search-option", "option-toko", "option-pembayaran");
-				$("#search-option").disabled = false;
-			} else if(menu == MENU_TOKO && menuState == MENU_PEMBAYARAN) {
-				switch_class("#toko", "menu-inactive", "menu-active");
+			} else if (menuState == MENU_PEMBAYARAN) {
 				switch_class("#pembayaran", "menu-active", "menu-inactive");
-				switch_class("#search", "search-pembayaran", "search-toko");
 				switch_class("#search-option", "option-pembayaran", "option-toko");
+				switch_class("#search", "search-pembayaran", "search-toko");
+				$("#search-option").disabled = false;
+			} else if (menuState == MENU_USER) {
+				switch_class("#user", "menu-active", "menu-inactive");
+			}
+
+			if(menu == MENU_TOKO) {
+				switch_class("#toko", "menu-inactive", "menu-active");
+			} else if(menu == MENU_PEMBAYARAN) {
+				switch_class("#pembayaran", "menu-inactive", "menu-active");
+				switch_class("#search-option", "option-toko", "option-pembayaran");
+				switch_class("#search", "search-toko", "search-pembayaran");
 				$("#search-option").disabled = true;
+			} else if(menu == MENU_USER) {
+				switch_class("#user", "menu-inactive", "menu-active");
 			} else if(menu == MENU_FAQ) {
 				window.location.href = 'http://<%= domain %>/faq';
 			}
+
 			menuState = menu;
 			$("#search").val("");
 			execSearch();
@@ -181,8 +194,10 @@
 		function execSearch() {
 			if(menuState == MENU_TOKO) {
 				load_toko(0);
-			} else {
+			} else if(menuState == MENU_PEMBAYARAN) {
 				load_payment(0);
+			} else if(menuState == MENU_USER) {
+				load_user(0);
 			}
 		}
 
@@ -246,6 +261,40 @@
 				});
 		}
 
+		function load_user(p) {
+			$("#result").html("");
+			page = p;
+			var searchKey = $("#search").val();
+			$.post("get-user",
+				{
+					search: searchKey,
+					offset: (page * maxItem),
+					limit: (maxItem+1)	
+				},
+				function(result) {
+					if(result.error != null) {
+						console.log(result.error);
+						return;
+					}
+					result.result.forEach(function(item, index) {
+						if((index+1) == (maxItem+1)) {
+							set_pagination(false, "load_user");
+						} else {
+							if (item.phone == "undefined") {
+								phone = "Belum Ada";
+							} else {
+								phone = item.phone;
+							}
+							$("#result").append(createFrameToko(item.id, item.name, item.email, phone));
+							if((index+1) == result.result.length) {
+								set_pagination(true, "load_user");
+							}
+						}
+					});
+				}
+			)
+		}
+
 		function set_pagination(isRightDisabled, load_function) {
 			var btnLeft;
 			var btnRight;
@@ -300,6 +349,8 @@
 					'  </div>'+
 					'</div>';
 		}
+
+
 
 		function goToAddPage() {
 			window.location.href = 'http://<%= domain %>/register-toko';

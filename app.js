@@ -161,6 +161,36 @@ app.post("/getToko", (req, res) => {
 	});
 });
 
+app.post("/get-user", (req, res) => {
+	logging("REQUEST/get-user: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
+		res.send({error: {msg: 'unauthorized'}, result: null});
+		return;
+	}
+
+	var limit = 10;
+	if(req.body.limit) {
+		limit = req.body.limit;
+	}
+	if(req.body.search) {
+		sql = "SELECT id, name, email, phone FROM `cus_user`" +
+			" WHERE name LIKE '%" + req.body.search + "%' OR email LIKE '%" +
+			req.body.search + "%' phone LIKE '%" + req.body.search + "%' ORDER BY id DESC LIMIT " + req.body.offset + ", " + limit;
+	} else {
+		sql = "SELECT id, name, email, phone FROM `cus_user`" +
+				" ORDER BY id DESC LIMIT " + req.body.offset + ", " + limit;
+	}
+
+	con.query(sql, (err, result) => {
+		if(!err) {
+			res.send({error: null, result: result});
+		} else {
+			res.send({error: {msg: 'failed to acquire data'}, result: null});
+			logging("SQL_ERR/place: " + err.code + " " + sql);
+		}
+	});
+});
+
 app.post("/toko/:toko_id/create-item",  upload.single('image'), (req, res) => {
 	logging("REQUEST/create-item: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
