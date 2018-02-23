@@ -1039,6 +1039,10 @@ app.post("/toggleFavItem", (req, res) => {
 
 app.post("/payment/:transaction_id/confirm", (req, res) => {
 	logging("REQUEST/payment-confirmation: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
+		res.send({error: {msg: 'unauthorized'}, result: null});
+		return;
+	}
 	if(!(req.body.payment_id)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
@@ -1053,6 +1057,24 @@ app.post("/payment/:transaction_id/confirm", (req, res) => {
 		}
 	});
 }); 
+
+app.post("/payment/:transaction_id/delete", (req, res) => {
+	logging("REQUEST/payment-delete: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
+		res.send({error: {msg: 'unauthorized'}, result: null});
+		return;
+	}
+	var del = "DELETE FROM `cus_transaction` WHERE transaction_id=" + req.params.transaction_id;
+	con.query(del,(err, result) => {
+		if(err) {
+			res.send({error: {msg: 'failed to delete transaction'}, result: null});
+			logging("SQL_ERR/payment-delete: " + err.code + " " + sql);
+		} else {
+			var page = "http://" + host[HOST_DOMAIN];
+			res.redirect(page);
+		}
+	});
+});
 
 app.post("/payment/:transaction_id/rate", (req, res) => {
 	logging("REQUEST/payment-rate: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
