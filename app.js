@@ -56,6 +56,17 @@ app.use(session({
 	saveUninitialized: false
 }));
 
+app.use("/", function(req, res, next) {
+	logging("REQUEST" + req.originalUrl + ": body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
+	if (req.method == "POST") {
+		if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
+			res.send({error: {msg: 'unauthorized'}, result: null});
+			return;
+		}
+	}
+	next();
+});
+
 app.listen(3000, () => {
 	fs.writeFile("log.dat", "", (err) => {
 		if(err) {
@@ -160,12 +171,6 @@ app.post("/getToko", (req, res) => {
 });
 
 app.post("/get-user", (req, res) => {
-	logging("REQUEST/get-user: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
-		res.send({error: {msg: 'unauthorized'}, result: null});
-		return;
-	}
-
 	var limit = 10;
 	if(req.body.limit) {
 		limit = req.body.limit;
@@ -189,12 +194,7 @@ app.post("/get-user", (req, res) => {
 	});
 });
 
-app.post("/toko/:toko_id/create-item", (req, res) => {
-	logging("REQUEST/create-item: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
-		res.send({error: {msg: 'unauthorized'}, result: null});
-		return;
-	}
+app.post("/toko/:toko_id/create-item", (req, res) => {	
 	if(!(req.body.name && req.body.price)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
@@ -304,11 +304,6 @@ app.post("/toko/:toko_id/create-item", (req, res) => {
 });
 
 app.post("/create-toko", (req, res) => {
-	logging("REQUEST/create-toko: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
-		res.send({error: {msg: 'unauthorized'}, result: null});
-		return;
-	}
 	if(!(req.body.name && req.body.address && req.body.open_at &&
 			req.body.close_at && req.body.latitude && req.body.longitude && 
 			req.body.phone && req.body.category)) {
@@ -438,11 +433,6 @@ app.post("/create-toko", (req, res) => {
 });
 
 app.post("/toko/:id/delete", (req, res) => {
-	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
-		res.send({error: {msg: 'unauthorized'}, result: null});
-		return;
-	}
-
 	var select = "SELECT img_url FROM `cus_toko` WHERE id='" + req.params.id + "'";
 	con.query(select, (err, result) => {
 		if(!err) {
@@ -500,11 +490,6 @@ app.post("/toko/:id/delete", (req, res) => {
 });
 
 app.post("/toko/:toko_id/item/:id/delete", (req, res) => {
-	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
-		res.send({error: {msg: 'unauthorized'}, result: null});
-		return;
-	}
-
 	var select = "SELECT img_url FROM `cus_item` WHERE id='" + req.params.id + "'";
 	con.query(select, (err, result) => {
 		if(err) {
@@ -543,11 +528,6 @@ app.post("/toko/:toko_id/item/:id/delete", (req, res) => {
 });
 
 app.post("/edit-account", (req,res) => {
-	logging("REQUEST/edit-account: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
-		res.send({error: {msg: 'unauthorized'}, result: null});
-		return;
-	}
 	if(!req.body.user_id) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
@@ -632,11 +612,6 @@ app.post("/edit-account", (req,res) => {
 });
 
 app.post("/purchase", (req, res) => {
-	logging("REQUEST/edit-account: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization != host[HOST_KEY]) {
-		res.send({error: {msg: 'unauthorized'}, result: null});
-		return;
-	}
 	if(!(req.body.user_id && req.body.estimation_hour && req.body.estimation_minute)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
@@ -680,11 +655,6 @@ app.post("/purchase", (req, res) => {
 });
 
 app.post("/create-account", (req, res) => {
-	logging("REQUEST/create-account: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
-		res.send({error: {msg: 'unauthorized'}, result: null});
-		return;
-	}
 	if(!(req.body.name && req.body.email && req.body.password_1 && req.body.password_2)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
@@ -749,12 +719,6 @@ app.post("/create-account", (req, res) => {
 });
 
 app.post("/verify", (req, res) => {
-	logging("REQUEST/verify: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization != host[HOST_KEY]) {
-		res.send({error: {msg: 'unauthorized'}, result: null});
-		return;
-	}
-
 	var password = req.body.password;
 
 	if(!(req.body.email && password != null)) {
@@ -843,11 +807,6 @@ app.post("/verify", (req, res) => {
 });
 
 app.post("/place", (req, res) => {
-	logging("REQUEST/place: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization != host[HOST_KEY]) {
-		res.send({error: {msg: 'unauthorized'}, result: null});
-		return;
-	}
 	if(!(req.body.toko_id)) {
 		if(!(req.body.category && req.body.latitude && req.body.longitude)) {
 			res.send({error: {msg: 'lack of parameter'}, result: null});
@@ -899,12 +858,6 @@ app.post("/place", (req, res) => {
 });
 
 app.post("/getItemList", (req, res) => {
-	logging("REQUEST/getItemList: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(!(req.body.toko_id) && !req.body.item_id) {
-		res.send({error: {msg: 'lack of parameter'}, result: null});
-		return;
-	}
-
 	var sql;
 	if(req.body.item_id) {
 		sql = "SELECT toko_id, name, price, img_url, description FROM `cus_item` WHERE " + 
@@ -951,11 +904,6 @@ app.post("/getItemList", (req, res) => {
 });
 
 app.post("/toggleFavItem", (req, res) => {
-	logging("REQUEST/toggleFavItem: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization != host[HOST_KEY]) {
-		res.send({error: {msg: 'unauthorized'}, result: null});
-		return;
-	}
 	if(!(req.body.user_id && req.body.item_id && req.body.is_fav)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
@@ -1038,11 +986,6 @@ app.post("/toggleFavItem", (req, res) => {
 
 
 app.post("/payment/:transaction_id/confirm", (req, res) => {
-	logging("REQUEST/payment-confirmation: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
-		res.send({error: {msg: 'unauthorized'}, result: null});
-		return;
-	}
 	if(!(req.body.payment_id)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
@@ -1059,11 +1002,6 @@ app.post("/payment/:transaction_id/confirm", (req, res) => {
 }); 
 
 app.post("/payment/:transaction_id/delete", (req, res) => {
-	logging("REQUEST/payment-delete: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
-		res.send({error: {msg: 'unauthorized'}, result: null});
-		return;
-	}
 	var del = "DELETE FROM `cus_transaction` WHERE transaction_id=" + req.params.transaction_id;
 	con.query(del,(err, result) => {
 		if(err) {
@@ -1077,7 +1015,6 @@ app.post("/payment/:transaction_id/delete", (req, res) => {
 });
 
 app.post("/payment/:transaction_id/rate", (req, res) => {
-	logging("REQUEST/payment-rate: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(!(req.body.rating)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
@@ -1094,11 +1031,6 @@ app.post("/payment/:transaction_id/rate", (req, res) => {
 });
 
 app.post("/getHistory", (req, res) => {
-	logging("REQUEST/getHistory: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
-	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
-		res.send({error: {msg: 'unauthorized'}, result: null});
-		return;
-	}
 	if(!(req.body.user_id)) {
 		res.send({error: {msg: 'lack of parameter'}, result: null});
 		return;
@@ -1234,7 +1166,6 @@ app.get("/getFAQ", (req, res) => {
 });
 
 app.post("/edit-faq", (req, res) => {
-	logging("REQUEST/edit-faq: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	var answer = req.body.answer.replace(/'/g, "&#39");
 	if (req.body.id == -1) {
 		var sql = "INSERT INTO `cus_faq` (question, answer) VALUES ('" + req.body.question + "','" + answer + "')";
@@ -1253,7 +1184,6 @@ app.post("/edit-faq", (req, res) => {
 });
 
 app.post("/faq/:id/delete", (req, res) => {
-	logging("REQUEST/faq-delete: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	var del = "DELETE FROM `cus_faq` WHERE id=" + req.params.id;
 	con.query(del, (err, result) => {
 		if(err) {
