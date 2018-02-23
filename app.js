@@ -6,8 +6,6 @@ var bodyParser = require("body-parser");
 var session = require('express-session');
 var MySQLStore = require('express-mysql-session');
 var path = require('path');
-var multer  = require('multer');
-var upload = multer({ dest: 'img/temp/' });
 var fse = require('fs-extra');
 
 const HOST_HOST = 0;
@@ -191,7 +189,7 @@ app.post("/get-user", (req, res) => {
 	});
 });
 
-app.post("/toko/:toko_id/create-item",  upload.single('image'), (req, res) => {
+app.post("/toko/:toko_id/create-item", (req, res) => {
 	logging("REQUEST/create-item: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
@@ -305,7 +303,7 @@ app.post("/toko/:toko_id/create-item",  upload.single('image'), (req, res) => {
 	});
 });
 
-app.post("/create-toko", upload.single('image'), (req, res) => {
+app.post("/create-toko", (req, res) => {
 	logging("REQUEST/create-toko: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if(req.headers.authorization != host[HOST_KEY] && req.session.authorized == undefined) {
 		res.send({error: {msg: 'unauthorized'}, result: null});
