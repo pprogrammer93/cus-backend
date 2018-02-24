@@ -18,14 +18,6 @@ const HOST_DOMAIN = 5;
 const HOST_KEY = 6;
 const HOST_DIR = 7;
 
-var TRANSACTION_ID;
-var MYSQL_SYNC;
-function getTransactionId() {
-	var transaction_id = TRANSACTION_ID;
-	TRANSACTION_ID = TRANSACTION_ID + 1;
-	return transaction_id;
-}
-
 var host = fs.readFileSync('host.dat', 'utf8').split(",");
 if(host[HOST_PASS] == 0) {
 	host[HOST_PASS] = "";
