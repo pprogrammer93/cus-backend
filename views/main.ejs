@@ -94,40 +94,38 @@
 		  </ol>
 		</nav>
 	</div>
-	<!-- <div style="position: absolute; height: 100%; width: 100%;"> -->
-		<div style="width: 60%; position: absolute; top: 50px; left: 50%; transform: translateX(-50%);">
-			<div style="width: 100%; text-align: center;">
-				<h1>CUS</h1>
-			</div>
-			<div class="container" style="margin-bottom: 10px;">
-				<div class="row">
-					<div id="toko" class="col menu-active" onclick="change_menu(0)" style="background: white; padding: 7px; text-align: center;">
-						<span style="cursor: pointer;">Toko</span>
-					</div>
-					<div id="pembayaran" class="col menu-inactive" onclick="change_menu(1)" style="background: white; padding: 7px; text-align: center;">
-						<span style="cursor: pointer;">Pembayaran</span>
-					</div>
-					<div id="user" class="col menu-inactive" onclick="change_menu(2)" style="background: white; padding: 7px; text-align: center;">
-						<span style="cursor: pointer;">User</span>
-					</div>
-					<div id="faq" class="col menu-inactive" onclick="change_menu(3)" style="background: white; padding: 7px; text-align: center;">
-						<span style="cursor: pointer;">FAQ</span>
-					</div>
+	<div style="width: 60%; position: relative; top: 50px; left: 50%; transform: translateX(-50%);">
+		<div style="width: 100%; text-align: center;">
+			<h1>CUS</h1>
+		</div>
+		<div class="container" style="margin-bottom: 10px;">
+			<div class="row">
+				<div id="toko" class="col menu-active" onclick="change_menu(0)" style="background: white; padding: 7px; text-align: center;">
+					<span style="cursor: pointer;">Toko</span>
+				</div>
+				<div id="pembayaran" class="col menu-inactive" onclick="change_menu(1)" style="background: white; padding: 7px; text-align: center;">
+					<span style="cursor: pointer;">Pembayaran</span>
+				</div>
+				<div id="user" class="col menu-inactive" onclick="change_menu(2)" style="background: white; padding: 7px; text-align: center;">
+					<span style="cursor: pointer;">User</span>
+				</div>
+				<div id="faq" class="col menu-inactive" onclick="change_menu(3)" style="background: white; padding: 7px; text-align: center;">
+					<span style="cursor: pointer;">FAQ</span>
 				</div>
 			</div>
-			<div style="position: relative; width: 100%; height: 50px;">
-				<input id="search" class="form-control input-transition search-toko" type="text" placeholder="Search Key" autocomplete="off" />
-				<select id="search-option" class="form-control input-transition option-toko" onchange="loadPayment(0)">
-			        <option selected>Both</option>
-			        <option>Completed</option>
-			        <option>Waiting</option>
-			      </select>
-			</div>
-			<div id="result" style="margin: auto;">
-			</div>
-			<% include partials/pagination.ejs%>
 		</div>
-	<!-- </div> -->
+		<div style="position: relative; width: 100%; height: 50px;">
+			<input id="search" class="form-control input-transition search-toko" type="text" placeholder="Search Key" autocomplete="off" />
+			<select id="search-option" class="form-control input-transition option-toko" onchange="loadPayment(0)">
+		        <option selected>Both</option>
+		        <option>Completed</option>
+		        <option>Waiting</option>
+		      </select>
+		</div>
+		<div id="result" style="margin: auto;">
+		</div>
+		<% include partials/pagination.ejs%>
+	</div>
 
 	<script type="text/javascript">
 		const MENU_TOKO = 0;
