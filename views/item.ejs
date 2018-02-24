@@ -88,12 +88,11 @@
 			</div>
 		</div>
 	</div>
-	<!-- Modal Delete -->
 	<% include partials/modal_delete.ejs %>
-	<!-- End of Modal Delete -->
 
 	<script type="text/javascript">
 		$(document).ready(function() {
+			$("#delete-form").attr('action', 'http://<%= domain %>/toko/<%= toko_id %>/item/<%= id %>/delete');
 			load_item(0);
 		});
 
