@@ -177,9 +177,12 @@
 						ids.push(item.id);
 						$("#result").append(createFrameOrder(item.name, item.item_quantity, (item.total_price/item.item_quantity), item.total_price));
 						if((index + 1) == result.result.length) {
-							if(item.status >= 1) {
+							if(item.status == 1 || item.status == 2) {
 								$("#submit").prop("disabled", true);
 								$("#button-delete").prop("disabled", true);
+							} else if (item.status == 3) {
+								$("#submit").prop("disabled", true);
+								$("$submit").html("Expired");
 							}
 						}
 					});

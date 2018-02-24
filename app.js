@@ -7,6 +7,7 @@ var session = require('express-session');
 var MySQLStore = require('express-mysql-session');
 var path = require('path');
 var fse = require('fs-extra');
+var microtime = require('microtime');
 
 const HOST_HOST = 0;
 const HOST_USER = 1;
@@ -32,7 +33,7 @@ var con = mysql.createConnection({
 	port: host[HOST_PORT],
 	database: host[HOST_DB]
 });
-var connect_msg = ""
+var connect_msg = "";
 con.connect(function(err) {
 	if(!err) {
 		connect_msg = "Hi there!";
@@ -116,6 +117,30 @@ app.get("/faq", (req, res) => {
 	req.session.authorized = true;
 	res.render("faq.ejs", {domain: host[HOST_DOMAIN], dir: host[HOST_DIR]});
 });
+
+var delete_transaction = function(req = null, res = null) {
+	var del = "DELETE FROM `cus_transaction` WHERE transaction_id=" + transaction_id;
+	con.query(del,(err, result) => {
+		if(err) {
+			res.send({error: {msg: 'failed to delete transaction'}, result: null});
+			logging("SQL_ERR/payment-delete: " + err.code + " " + sql);
+		} else {
+			var page = "http://" + host[HOST_DOMAIN];
+			res.redirect(page);
+		}
+	});
+}
+
+var expire_transaction = function(transaction_id) {
+	var sql = "UPDATE `cus_transaction` SET status=3 WHERE transaction_id='" + transaction_id + "'";
+	con.query(sql, (err, result) => {
+		if (err) {
+			logging("SQL_ERR/expire_transaction: " + err.code + " " + sql);
+		} else {
+			logging("SQL_ERR/expire_transaction: transaction " + transaction_id + " has been changed to expired.");
+		}
+	});
+}
 
 app.post("/getToko", (req, res) => {
 	logging("REQUEST/getToko: body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
@@ -216,8 +241,7 @@ app.post("/toko/:toko_id/create-item", (req, res) => {
 	if(req.file != undefined) {
 		var extension = req.file.originalname.split(".");
 		var filepath = "img/temp/" + req.file.filename;
-		var hrTime = process.hrtime();
-		var img_id = hrTime[0].toString() + hrTime[1].toString();
+		var img_id = microtime.now();
 		var img_name = req.body.name.replace(/ /g, '_');
 		var img_storage = "img/item/" + req.params.toko_id + "/" + img_id + "_" + img_name + "." + extension[1];
 		img_url = "http://" + host[HOST_DIR] + "/" + img_storage;
@@ -1001,18 +1025,7 @@ app.post("/payment/:transaction_id/confirm", (req, res) => {
 	});
 }); 
 
-app.post("/payment/:transaction_id/delete", (req, res) => {
-	var del = "DELETE FROM `cus_transaction` WHERE transaction_id=" + req.params.transaction_id;
-	con.query(del,(err, result) => {
-		if(err) {
-			res.send({error: {msg: 'failed to delete transaction'}, result: null});
-			logging("SQL_ERR/payment-delete: " + err.code + " " + sql);
-		} else {
-			var page = "http://" + host[HOST_DOMAIN];
-			res.redirect(page);
-		}
-	});
-});
+app.post("/payment/:transaction_id/delete", delete_transaction);
 
 app.post("/payment/:transaction_id/rate", (req, res) => {
 	if(!(req.body.rating)) {
@@ -1039,10 +1052,10 @@ app.post("/getHistory", (req, res) => {
 	var select;
 	if(req.session.authorized != undefined) {
 		if(req.body.payment) {
-			select = "SELECT id, name, item_quantity, total_price, status FROM `cus_transaction` " +
+			select = "SELECT id, name, item_quantity, total_price, status, estimation FROM `cus_transaction` " +
 				"WHERE transaction_id=" + req.body.transaction_id;
 		} else {
-			select = "SELECT transaction_id, total_price, created_at, status FROM " +
+			select = "SELECT transaction_id, total_price, created_at, status, estimation FROM " +
 				"`cus_transaction`";
 			if(req.body.status == "completed") {
 				select += " WHERE status=1";
@@ -1084,6 +1097,7 @@ app.post("/getHistory", (req, res) => {
 				result_size = result.length;		
 				var currentTokoId = -1;
 
+				var estimated_json = dateToJSON(transaksi.estimation);
 				var transaction_list = [];
 				var currentTransactionId = "0";
 				var currentTransactionData = {};
@@ -1092,14 +1106,18 @@ app.post("/getHistory", (req, res) => {
 				var items_counter = 0;
 				var send_triggered = false;
 				result.forEach((transaksi, index) => {
+					if ((transaksi.status == 0) && isExpired(estimated_json, true)) {
+						expire_transaction(transaksi.transaction_id);
+						transaksi.status = 4;
+					}
 					if (currentTransactionId != transaksi.transaction_id) {
 						counter++;
 						currentTransactionId = transaksi.transaction_id;
 						currentTransactionData = {
 							transaction_id: transaksi.transaction_id,
 							created_at: transaksi.created_at, 
-							status: transaksi.status, 
-							estimation: transaksi.estimation,
+							status: status, 
+							estimation: estimated_json.hour + ":" + estimated_json.minute,
 							rating: transaksi.rating,
 							toko: null,
 							list_items: []
@@ -1139,7 +1157,17 @@ app.post("/getHistory", (req, res) => {
 					}
 				});
 			} else {
-				res.send({error: null, result: result});
+				transaction_result = [];
+				result.forEach((transaksi, index) => {
+					if ((transaksi.status == 0) && isExpired(transaksi.estimation, false)) {
+						expire_transaction(transaksi.transaction_id);
+						transaksi.status = 4;
+					}
+					transaction_result.push(transaksi);
+					if ((index + 1) == result.length) {
+						res.send({error: null, result: transaction_result});
+					}
+				});	
 			}
 		} else {
 			res.send({error: {msg: 'failed to retrieve data'}, result: null});
@@ -1203,6 +1231,19 @@ function logging(message) {
 }
 
 function formatTime(iHour, iMin) {
+	now = (new Date()).getTime();
+
+	if (iHour < (new Date()).getHours()) {
+		now = now + 86400000;
+	} else if (iHour == (new Date()).getHours()) {
+		if (iMin <= (new Date()).getMinutes()) {
+			now = now + 86400000;
+		}
+	} 
+
+	createdAt = new Date(now);
+	date = createdAt.getDate() + "-" + createdAt.getMonth() + "-" + createdAt.getFullYear();
+
 	if (iHour >= 10) {
 		sHour = iHour.toString();
 	} else {
@@ -1213,7 +1254,7 @@ function formatTime(iHour, iMin) {
 	} else {
 		sMin = "0" + iMin.toString();
 	}
-	return sHour + ":" + sMin;
+	return date + "-" + sHour + ":" + sMin;
 }
 
 function getTodayTime(time) {
@@ -1253,12 +1294,36 @@ function minusMinute(time, minus) {
 	return time;
 }
 
+function dateToJSON(date) {
+	dates = date.split("-");
+
+	if (dates.length != 4) {
+		return null;
+	} else {
+		time = dates[3].split(":");
+		if (time.length != 2) {
+			return null;
+		}
+		json = {'day': dates[0], 'month': dates[1], 'year': dates[2], 'hour': time[0], 'minute': time[1]};
+		return json;
+	}
+}
+
 function timeToJSON(time) {
 	t = time.split(":");
 	json = {hours: t[0], minutes: t[1]};
 	return json;
 }
 
+function isExpired(estimated_time, json) {
+	est_json = estimated_time;
+	if (!json) {
+		est_json = dateToJSON(estimated_time);	
+	}
+	estimated = new Date(est_json.year, est_json.month, est_json.day, est_json.hour, est_json.minute, 0, 0);
+	estimated = new Date(estimated.getTime() + 1800000);
+	return (estimated <= (new Date));
+}
 /*
 app.use(express.static("public"));
 

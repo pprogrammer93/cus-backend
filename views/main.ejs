@@ -80,6 +80,10 @@
 		.completed {
 			color: #5555ff;
 		}
+
+		.expired {
+			color: #cccccc;
+		}
 	</style>
 </head>
 <body>
@@ -340,8 +344,10 @@
 			var color;
 			if(status == 0) {
 				color = "waiting"
-			} else if(status >= 1) {
+			} else if(status == 1 || status == 2) {
 				color = "completed";
+			} else if(status == 3) {
+				color = "expired";
 			}
 			return  '<div class="card" onclick="goToPayment('+transaction_id+')">'+
 					'  <div style="padding: 10px;" class="card-body">'+
