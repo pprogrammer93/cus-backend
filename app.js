@@ -7,7 +7,7 @@ var session = require('express-session');
 var MySQLStore = require('express-mysql-session');
 var path = require('path');
 var fse = require('fs-extra');
-var microtime = require('microtime');
+var idGen = require('./scripts/id-gen');
 
 const HOST_HOST = 0;
 const HOST_USER = 1;
@@ -17,6 +17,14 @@ const HOST_DB = 4;
 const HOST_DOMAIN = 5;
 const HOST_KEY = 6;
 const HOST_DIR = 7;
+
+var TRANSACTION_ID;
+var MYSQL_SYNC;
+function getTransactionId() {
+	var transaction_id = TRANSACTION_ID;
+	TRANSACTION_ID = TRANSACTION_ID + 1;
+	return transaction_id;
+}
 
 var host = fs.readFileSync('host.dat', 'utf8').split(",");
 if(host[HOST_PASS] == 0) {
@@ -68,15 +76,6 @@ app.use("/", function(req, res, next) {
 	next();
 });
 
-app.listen(3000, () => {
-	fs.writeFile("log.dat", "", (err) => {
-		if(err) {
-			console.log("Something wrong!");
-		} else {
-			console.log("Server On!");
-		}
-	});
-});
 
 app.get("/", (req, res) => {
 	req.session.authorized = true;
@@ -241,7 +240,7 @@ app.post("/toko/:toko_id/create-item", (req, res) => {
 	if(req.file != undefined) {
 		var extension = req.file.originalname.split(".");
 		var filepath = "img/temp/" + req.file.filename;
-		var img_id = microtime.now();
+		var img_id = idGen.getItemImageId();
 		var img_name = req.body.name.replace(/ /g, '_');
 		var img_storage = "img/item/" + req.params.toko_id + "/" + img_id + "_" + img_name + "." + extension[1];
 		img_url = "http://" + host[HOST_DIR] + "/" + img_storage;
@@ -351,8 +350,7 @@ app.post("/create-toko", (req, res) => {
 	if(req.file != undefined) {
 		var extension = req.file.originalname.split(".");
 		var filepath = "img/temp/" + req.file.filename;
-		var hrTime = process.hrtime();
-		var img_id = hrTime[0].toString() + hrTime[1].toString();
+		var img_id = idGen.getTokoImageId();
 		var img_name = req.body.name.replace(/ /g, '_');
 		var img_storage = "img/toko/" + img_id + "_" + img_name + "." + extension[1];
 		img_url = "http://" + host[HOST_DIR] + "/" + img_storage;
@@ -645,8 +643,7 @@ app.post("/purchase", (req, res) => {
 	}
 
 	var pending_purchase = [];
-	var hrTime = process.hrtime();
-	var transaction_id = hrTime[0].toString() + hrTime[1].toString();
+	var transaction_id = idGen.getTransactionId();
 	var time = new Date();
 	var created_at = time.getDate() + "-" + (time.getMonth() + 1) + "-" + time.getFullYear() + "-" + time.getHours() + ":" + time.getMinutes(); 
 	var estimation = formatTime(req.body.estimation_hour, req.body.estimation_minute);
@@ -1324,6 +1321,62 @@ function isExpired(estimated_time, json) {
 	estimated = new Date(estimated.getTime() + 1800000);
 	return (estimated <= (new Date));
 }
+
+
+var RETURN_LIMIT = 3;
+var RETURN_COUNTER = 0;
+function init() {
+	fs.writeFile("log.dat", "", (err) => {
+		if(err) {
+			console.log("Something wrong!");
+		}
+			var getTransactionId = "SELECT MAX(transaction_id) as transaction_id FROM `cus_transaction`";
+			var getTokoImageId = "SELECT MAX(id) as image_id FROM `cus_toko`";
+			var getItemImageId = "SELECT MAX(id) as image_id FROM `cus_item`";
+			con.query(getTransactionId, (err, result) => {
+				if (err) {
+					up("init/getTransactionId: " + err.code + " " + getTransactionId);
+				} else {
+					idGen.setTransactionId(result[0].transaction_id);
+					up();
+				}
+			});
+			con.query(getTokoImageId, (err, result) => {
+				if (err) {
+					up("init/getTokoImageId: " + err.code + " " + getTokoImageId);
+				} else {
+					idGen.setTokoImageId(result[0].image_id);
+					up();
+				}
+			});
+			con.query(getItemImageId, (err, result) => {
+				if (err) {
+					up("init/getItemImageId: " + err.code + " " + getTokoImageId);
+				} else {
+					idGen.setItemImageId(result[0].image_id);
+					up();
+				}
+			});
+	});
+}
+
+function up(err = null) {
+	if (!err) {
+		RETURN_COUNTER = RETURN_COUNTER + 1;
+		if (RETURN_COUNTER == RETURN_LIMIT) {
+			app.listen(3000, () => {
+				console.log("Server On!");
+			});
+		}
+	} else {
+		throw new Error(err);
+	}
+}
+
+init();
+
+// async.waterfall([code_one, slowFunction], () => {console.log("Udah!")});
+
 /*
 app.use(express.static("public"));
 
