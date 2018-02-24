@@ -94,7 +94,7 @@
 		  </ol>
 		</nav>
 	</div>
-	<div style="position: absolute; height: 100%; width: 100%;">
+	<!-- <div style="position: absolute; height: 100%; width: 100%;"> -->
 		<div style="width: 60%; position: absolute; top: 50px; left: 50%; transform: translateX(-50%);">
 			<div style="width: 100%; text-align: center;">
 				<h1>CUS</h1>
@@ -117,7 +117,7 @@
 			</div>
 			<div style="position: relative; width: 100%; height: 50px;">
 				<input id="search" class="form-control input-transition search-toko" type="text" placeholder="Search Key" autocomplete="off" />
-				<select id="search-option" class="form-control input-transition option-toko" onchange="load_payment(0)">
+				<select id="search-option" class="form-control input-transition option-toko" onchange="loadPayment(0)">
 			        <option selected>Both</option>
 			        <option>Completed</option>
 			        <option>Waiting</option>
@@ -125,13 +125,9 @@
 			</div>
 			<div id="result" style="margin: auto;">
 			</div>
+			<% include partials/pagination.ejs%>
 		</div>
-		<div id="pagination" class="btn-group" style="position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%);" role="group" aria-label="Basic example">
-			<button type="button" class="btn btn-secondary" onclick="load_toko(0)" disabled> < </button>
-			<button type="button" class="btn btn-warning" onclick="goToAddPage()">NEW</button>
-			<button type="button" class="btn btn-secondary" onclick="load_toko(0)" disabled> > </button>
-		</div>
-	</div>
+	<!-- </div> -->
 
 	<script type="text/javascript">
 		const MENU_TOKO = 0;
@@ -186,7 +182,6 @@
 		var timer = 400;
 		var page = 0;
 		var maxItem = 3;
-		
 
 		$(document).ready(function() {
 			execSearch();
@@ -197,15 +192,15 @@
 		});
 		function execSearch() {
 			if(menuState == MENU_TOKO) {
-				load_toko(0);
+				loadToko(0);
 			} else if(menuState == MENU_PEMBAYARAN) {
-				load_payment(0);
+				loadPayment(0);
 			} else if(menuState == MENU_USER) {
-				load_user(0);
+				loadUser(0);
 			}
 		}
 
-		function load_toko(p) {
+		function loadToko(p) {
 			$("#result").html("");
 			page = p;
 			var searchKey = $("#search").val();
@@ -222,11 +217,11 @@
 					}
 					result.result.forEach(function(item, index) {
 						if((index+1) == (maxItem+1)) {
-							set_pagination(false, "load_toko");
+							setPagination(false, "loadToko");
 						} else {
 							$("#result").append(createFrameToko(item.id, item.name, item.address.substring(0, 27) + "...", item.description.substring(0, 27) + "..."));
 							if((index+1) == result.result.length) {
-								set_pagination(true, "load_toko");
+								setPagination(true, "loadToko");
 							}
 						}
 					});
@@ -234,7 +229,7 @@
 			);
 		}
 
-		function load_payment(p) {
+		function loadPayment(p) {
 			$("#result").html("");
 			page = p;
 			var status = $("#search-option").find(":selected").text().toLowerCase();
@@ -254,18 +249,18 @@
 					}
 					result.result.forEach(function(item, index) {
 						if((index+1) == (maxItem+1)) {
-							set_pagination(false, "load_payment");
+							setPagination(false, "loadPayment");
 						} else {
 							$("#result").append(createFramePayment(item.transaction_id, item.total_price, item.created_at, item.status));
 							if((index+1) == result.result.length) {
-								set_pagination(true, "load_payment");
+								setPagination(true, "loadPayment");
 							}
 						}
 					});
 				});
 		}
 
-		function load_user(p) {
+		function loadUser(p) {
 			$("#result").html("");
 			page = p;
 			var searchKey = $("#search").val();
@@ -282,7 +277,7 @@
 					}
 					result.result.forEach(function(item, index) {
 						if((index+1) == (maxItem+1)) {
-							set_pagination(false, "load_user");
+							setPagination(false, "loadUser");
 						} else {
 							if (item.phone == "undefined") {
 								phone = "Belum Ada";
@@ -291,7 +286,7 @@
 							}
 							$("#result").append(createFrameUser(item.id, item.name, item.email, phone));
 							if((index+1) == result.result.length) {
-								set_pagination(true, "load_user");
+								setPagination(true, "loadUser");
 							}
 						}
 					});
@@ -299,7 +294,7 @@
 			)
 		}
 
-		function set_pagination(isRightDisabled, load_function) {
+		function setPagination(isRightDisabled, loadFunction) {
 			var btnLeft;
 			var btnRight;
 			var disableLeft;
@@ -317,15 +312,15 @@
 			}
 
 			var btnMid;
-			if(load_function == "load_payment") {
+			if(loadFunction == "loadPayment") {
 				btnMid = "";
-			} else if(load_function == "load_toko") {
+			} else if(loadFunction == "loadToko") {
 				btnMid = '<button type="button" class="btn btn-warning" onclick="goToAddPage()">NEW</button>';
-			} else if(load_function == "load_user") {
+			} else if(loadFunction == "loadUser") {
 				btnMid = "";
 			}
-			btnLeft = '<button type="button" class="btn btn-secondary" onclick="'+load_function+'('+(page-1)+')" '+disableLeft+'> < </button>';
-			btnRight = '<button type="button" class="btn btn-secondary" onclick="'+load_function+'('+(page+1)+')" '+disableRight+'> > </button>';
+			btnLeft = '<button type="button" class="btn btn-secondary" onclick="'+loadFunction+'('+(page-1)+')" '+disableLeft+'> < </button>';
+			btnRight = '<button type="button" class="btn btn-secondary" onclick="'+loadFunction+'('+(page+1)+')" '+disableRight+'> > </button>';
 
 			$("#pagination").html(btnLeft+btnMid+btnRight);
 		}
