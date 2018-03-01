@@ -470,28 +470,7 @@ app.post("/toko/:id/delete", (req, res) => {
 					if(err) {
 						res.send({error: {msg: 'failed to delete data toko'}, result: null});
 						logging("SQL_ERR/delete-toko: " + err.code);
-					} else {
-						select = "SELECT id FROM `cus_item` WHERE toko_id='" + req.params.id + "'";
-						con.query(select, (err, ids) => {
-							if(err) {
-								logging("SQL_ERR/delete-toko: " + err.code);
-							} else {
-								ids.forEach((id, index) => {
-									del = "DELETE FROM `cus_favourite` WHERE item_id='" + id + "'";
-									con.query(del, (err, result) => {
-										if(err) {
-											logging("SQL_ERR/delete-toko: " + err.code);
-										}
-									})
-								});
-							}
-						});
-						del = "DELETE FROM `cus_item` WHERE toko_id='" + req.params.id + "'";
-						con.query(del, (err, result) => {
-							if(err) {
-								logging("SQL_ERR/delete-toko: " + err.code);
-							}
-						}); 
+					} else { 
 						var page = "http://" + host[HOST_DOMAIN];
 						res.redirect(page);
 					}
@@ -525,16 +504,8 @@ app.post("/toko/:toko_id/item/:id/delete", (req, res) => {
 					res.send({error: {msg: 'failed to delete data item'}, result: null});
 					logging("SQL_ERR/delete-item: " + err.code);
 				} else {
-					del = "DELETE FROM `cus_favourite` WHERE item_id='" + req.params.id + "'";
-					con.query(del, (err, result) => {
-						if(err) {
-							res.send({error: {msg: 'failed to delete data favourite'}, result: null});
-							logging("SQL_ERR/delete-item: " + err.code + " " + del);
-						} else {
-							var page = "http://" + host[HOST_DOMAIN] + /toko/ + req.params.toko_id;
-							res.redirect(page);
-						}
-					});
+					var page = "http://" + host[HOST_DOMAIN] + /toko/ + req.params.toko_id;
+					res.redirect(page);
 				}
 			});
 		}
