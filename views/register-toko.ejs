@@ -38,7 +38,7 @@
 		  </ol>
 		</nav>
 		<div class="container">
-			<form id="input-form" method="POST" action="http://<%= domain %>/create-toko" encType="multipart/form-data">
+			<form id="input-form" method="POST" action="http://<%= domain %>/create/toko" encType="multipart/form-data">
 				<div class="card border-info mb-3 text-center">
 				  <div class="card-header">
 				    Shop Input Form
@@ -127,44 +127,50 @@
 		      	<div class="form-group row">
 					<label class="col-sm-4 col-form-label" for="at_senin">Senin</label>
 					<div class="col-sm-8">
-						<input id="at_senin" class="time-validate form-control form-control-sm" name="at_senin" type="text" data-container="body" data-placement="top" data-title="invalid" data-trigger="manual"/>
+						<input id="at_senin" class="time-validate form-control form-control-sm" name="at_senin" type="text" data-number="0" data-container="body" data-placement="top" data-title="invalid" data-trigger="manual"/>
 					</div>
 				</div>
 				<div class="form-group row">
 					<label class="col-sm-4 col-form-label" for="at_selasa">Selasa</label>
 					<div class="col-sm-8">
-						<input id="at_selasa" class="time-validate form-control form-control-sm" name="at_selasa" type="text" data-placement="top" data-title="invalid" data-trigger="manual"/>
+						<input id="at_selasa" class="time-validate form-control form-control-sm" name="at_selasa" type="text" data-number="1" data-placement="top" data-title="invalid" data-trigger="manual"/>
 					</div>
 				</div>
 				<div class="form-group row">
 					<label class="col-sm-4 col-form-label" for="at_rabu">Rabu</label>
 					<div class="col-sm-8">
-						<input id="at_rabu" class="time-validate form-control form-control-sm" name="at_rabu" type="text" data-placement="top" data-title="invalid" data-trigger="manual"/>
+						<input id="at_rabu" class="time-validate form-control form-control-sm" name="at_rabu" type="text" data-number="2" data-placement="top" data-title="invalid" data-trigger="manual"/>
 					</div>
 				</div>
 				<div class="form-group row">
 					<label class="col-sm-4 col-form-label" for="at_kamis">Kamis</label>
 					<div class="col-sm-8">
-						<input id="at_kamis" class="time-validate form-control form-control-sm" name="at_kamis" type="text" data-placement="top" data-title="invalid" data-trigger="manual"/>
+						<input id="at_kamis" class="time-validate form-control form-control-sm" name="at_kamis" type="text" data-number="3" data-placement="top" data-title="invalid" data-trigger="manual"/>
 					</div>
 				</div>
 				<div class="form-group row">
 					<label class="col-sm-4 col-form-label" for="at_jumat">Jumat</label>
 					<div class="col-sm-8">
-						<input id="at_jumat" class="time-validate form-control form-control-sm" name="at_jumat" type="text" data-placement="top" data-title="invalid" data-trigger="manual"/>
+						<input id="at_jumat" class="time-validate form-control form-control-sm" name="at_jumat" type="text" data-number="4" data-placement="top" data-title="invalid" data-trigger="manual"/>
 					</div>
 				</div>
 				<div class="form-group row">
 					<label class="col-sm-4 col-form-label" for="at_sabtu">Sabtu</label>
 					<div class="col-sm-8">
-						<input id="at_sabtu" class="time-validate form-control form-control-sm" name="at_sabtu" type="text" data-placement="top" data-title="invalid" data-trigger="manual"/>
+						<input id="at_sabtu" class="time-validate form-control form-control-sm" name="at_sabtu" type="text" data-number="5" data-placement="top" data-title="invalid" data-trigger="manual"/>
 					</div>
 				</div>
 				<div class="form-group row">
 					<label class="col-sm-4 col-form-label" for="at_minggu">Minggu</label>
 					<div class="col-sm-8">
-						<input id="at_minggu" class="time-validate form-control form-control-sm" name="at_minggu" type="text" data-placement="top" data-title="invalid" data-trigger="manual"/>
+						<input id="at_minggu" class="time-validate form-control form-control-sm" name="at_minggu" type="text" data-number="6" data-placement="top" data-title="invalid" data-trigger="manual"/>
 					</div>
+				</div>
+				<div class="form-check">
+				  	<input name="salin" class="form-check-input" type="checkbox" value="" id="salin" checked="false">
+				  	<label class="form-check-label" for="salin">
+				    	Salin Hari Senin Untuk Semua Hari
+				  	</label>
 				</div>
 		      </div>
 		      <div class="modal-footer">
@@ -176,18 +182,45 @@
 		</div>
 		<!-- End of Modal -->
 		<script type="text/javascript">
+			var old_time;
+			var time = [];
+			var ids = [];
+
 			$("#open_at").on("focus", function() {
 				prepareModal($("#open_at").val());
 				$("#button-save-time").attr("onclick", "setText('open')");
 				$("#input-time").modal("show");
+				$("#salin").prop("checked", false);
 			});
 			$("#close_at").on("focus", function() {
 				prepareModal($("#close_at").val());
 				$("#button-save-time").attr("onclick", "setText('close')");
 				$("#input-time").modal("show");
+				$("#salin").prop("checked", false);
+			});
+			$("#salin").on("change", function() {
+				if (this.checked) {
+					old_time = time;
+					for (i = 0; i < time.length; ++i) {
+						console.log(time[0]);
+						$(ids[i]).val(time[0]);
+					}
+				} else {
+					time = old_time;
+					for (i = 0; i < time.length; ++i) {
+						$(ids[i]).val(time[i]);
+					}
+				}
 			});
 
 			function toggle_time_save(obj, isDisabled) {
+				time[obj.attr("data-number")] = obj.val();
+				if ($("#salin").prop("checked") && obj.attr("data-number") == 0) {
+					for (i = 0; i < time.length; ++i) {
+						console.log(time[0]);
+						$(ids[i]).val(time[0]);
+					}
+				}
 				if (isDisabled) {
 					if (obj.attr("data-save") == undefined) {
 						obj.tooltip("show");
@@ -273,6 +306,18 @@
 
 			function prepareModal(times) {
 				time = times.split(",");
+
+				if (time.length != 7) {
+					t_senin = $("#at_senin").val().trim();
+					t_selasa = $("#at_selasa").val().trim();
+					t_rabu = $("#at_rabu").val().trim();
+					t_kamis = $("#at_kamis").val().trim();
+					t_jumat = $("#at_jumat").val().trim();
+					t_sabtu = $("#at_sabtu").val().trim();
+					t_minggu = $("#at_minggu").val().trim();
+					time = [t_senin, t_selasa, t_rabu, t_kamis, t_jumat, t_sabtu, t_minggu];
+				}
+
 				ids = ["#at_senin", "#at_selasa", "#at_rabu", "#at_kamis", "#at_jumat", "#at_sabtu", "#at_minggu"];
 				time.forEach((t, index) => {
 					$(ids[index]).val(t);

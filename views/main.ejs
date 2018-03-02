@@ -202,7 +202,7 @@
 			$("#result").html("");
 			page = p;
 			var searchKey = $("#search").val();
-			$.post("getToko", 
+			$.post("toko/get", 
 				{
 					search: searchKey,
 					offset: (page * maxItem),
@@ -362,11 +362,13 @@
 		}
 
 		function goToAddPage() {
-			window.location.href = 'http://<%= domain %>/register-toko';
+			window.location.href = 'http://<%= domain %>/register/toko';
 		}
 
 		function goToToko(id) {
-			window.location.href = 'http://<%= domain %>/toko/'+id;
+			var link = 'http://<%= domain %>/toko/'+id;
+			console.log("error: " + link);
+			window.location.href = link;
 		}
 
 		function goToPayment(transaction_id) {
