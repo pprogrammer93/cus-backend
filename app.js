@@ -68,8 +68,6 @@ function init() {
 
 async function idChecking() {
 	var getTransactionId = "SELECT MAX(transaction_id) as transaction_id FROM `cus_transaction`";
-	var getTokoImageId = "SELECT MAX(id) as image_id FROM `cus_toko`";
-	var getItemImageId = "SELECT MAX(id) as image_id FROM `cus_item`";
 	var transactionId = await new Promise(resolve => {
 		host.con.query(getTransactionId, (err, result) => {
 			if (err) {
@@ -77,26 +75,6 @@ async function idChecking() {
 			} else {
 				idGen.setTransactionId(result[0].transaction_id);
 				resolve(result[0].transaction_id);
-			}
-		});
-	});
-	var tokoImageId = await new Promise(resolve => {
-		host.con.query(getTokoImageId, (err, result) => {
-			if (err) {
-				resolve(-1);
-			} else {
-				idGen.setTokoImageId(result[0].image_id);
-				resolve(result[0].image_id);
-			}
-		});
-	});
-	var itemImageId = await new Promise(resolve => {
-		host.con.query(getItemImageId, (err, result) => {
-			if (err) {
-				resolve(-1);
-			} else {
-				idGen.setItemImageId(result[0].image_id);
-				resolve(result[0].image_id);
 			}
 		});
 	});
