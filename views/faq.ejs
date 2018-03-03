@@ -40,7 +40,7 @@
 			</nav>
 		</div>
 		<div class="container" style="margin-top: 50px;">
-			<form id="input-form" method="POST" action="http://<%= domain %>/edit-faq">
+			<form id="input-form" method="POST" action="http://<%= domain %>/faq/create">
 				<div class="card border-info mb-3 text-center">
 				  <div class="card-header">
 				    FAQ
@@ -88,13 +88,12 @@
 			$(document).ready(function() {
 				$.ajax({
 					method: "GET",
-					url: "/getFAQ",
+					url: "/faq/get",
 					success: function(data) {
 						var result = data.result;
 						result.forEach((qa, index) => {
 							$("#question").append('<option value="' + (index + 1) + '">' + qa.question + '</option>');
-							ids.push(qa.id);
-							console.log(qa.id);
+							ids.push(qa.faq_id);
 							answers.push(qa.answer);
 						});
 					},
@@ -109,6 +108,7 @@
 					$("#button-delete").prop("disabled", true);
 					$("#input-question").attr("type", "text");
 					$("#faq-id").val("-1");
+					$("#input-form").attr("action", "http://<%= domain %>/faq/create");
 				} else {
 					$("#answer").val(answers[value].replace(/&#39/g, "'"));
 					$("#button-delete").prop("disabled", false);
@@ -116,6 +116,7 @@
 					$("#input-question").attr("type", "hidden");
 					$("#input-question").val(null);
 					$("#faq-id").val(ids[value]);
+					$("#input-form").attr("action", "http://<%= domain %>/faq/" + ids[value] + "/edit");
 				}
 			});
 

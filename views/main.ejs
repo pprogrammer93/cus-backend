@@ -217,7 +217,7 @@
 						if((index+1) == (maxItem+1)) {
 							setPagination(false, "loadToko");
 						} else {
-							$("#result").append(createFrameToko(item.id, item.name, item.address.substring(0, 27) + "...", item.description.substring(0, 27) + "..."));
+							$("#result").append(createFrameToko(item.toko_id, item.name, item.address.substring(0, 27) + "...", item.description.substring(0, 27) + "..."));
 							if((index+1) == result.result.length) {
 								setPagination(true, "loadToko");
 							}
@@ -232,11 +232,10 @@
 			page = p;
 			var status = $("#search-option").find(":selected").text().toLowerCase();
 			var searchKey = $("#search").val();
-			$.post("getHistory",
+			$.post("payment/history",
 				{
-					user_id: 0,
 					status: status,	
-					transaction_id: searchKey,
+					search: searchKey,
 					offset: (page * maxItem),
 					limit: (maxItem+1)	
 				},
@@ -262,7 +261,7 @@
 			$("#result").html("");
 			page = p;
 			var searchKey = $("#search").val();
-			$.post("get-user",
+			$.post("account",
 				{
 					search: searchKey,
 					offset: (page * maxItem),
@@ -362,13 +361,11 @@
 		}
 
 		function goToAddPage() {
-			window.location.href = 'http://<%= domain %>/register/toko';
+			window.location.href = 'http://<%= domain %>/toko/register';
 		}
 
 		function goToToko(id) {
-			var link = 'http://<%= domain %>/toko/'+id;
-			console.log("error: " + link);
-			window.location.href = link;
+			window.location.href = 'http://<%= domain %>/toko/'+id;
 		}
 
 		function goToPayment(transaction_id) {

@@ -71,7 +71,7 @@
 				</div>
 			</div>
 			<div style="position: relative; width: 100%; height: 50px;">
-				<form id="input-form" method="POST" action="http://<%= domain %>/create-toko" encType="multipart/form-data">
+				<form id="input-form" method="POST" action="http://<%= domain %>/toko/<%= id %>/edit" encType="multipart/form-data">
 					<div class="card border-info mb-3 text-center">
 					  <img id="image-show" class="card-img" />
 					  <div class="card-body">
@@ -418,7 +418,7 @@
 		function load_item(p) {
 			$("#result").html("");
 			var searchKey = $("#search").val();
-			$.post("../getItemList",
+			$.post(<%= id %> + "/item",
 				{
 					toko_id: <%= id %>,
 					search: searchKey,
@@ -426,12 +426,12 @@
 					limit: (maxItem+1)	
 				},
 				function(result) {
-					console.log(result.result);
+					console.log(result);
 					result.result.list_items.forEach(function(item, index) {
 						if((index+1) == (maxItem+1)) {
 							set_pagination(false, "load_item");
 						} else {
-							$("#result").append(createFrameItem(item.id, item.name, item.description, item.price));
+							$("#result").append(createFrameItem(item.item_id, item.name, item.description, item.price));
 							if((index+1) == result.result.length) {
 								set_pagination(true, "load_item");
 							}
@@ -484,7 +484,7 @@
 		}
 
 		function goToAddPage() {
-			window.location.href = 'http://<%= domain %>/toko/<%= id %>/register-item';
+			window.location.href = 'http://<%= domain %>/toko/<%= id %>/item/register';
 		}
 	</script>
 </body>

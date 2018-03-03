@@ -10,6 +10,7 @@ const GreaterOrEqual = ">=";
 const Less = "<";
 const LessOrEqual = "<=";
 const LIKE = "LIKE";
+const BETWEEN = 'BETWEEN';
 
 var condition = {
 	left_operator: null,
@@ -33,8 +34,16 @@ condition.toString = function() {
 	return left + " " + this.operator + " " + right;
 }
 
-createCondition = function(left, operator, right) {
+createCondition = function(left, operator, right, extension = null) {
 	var newCondition = utils.clone(condition);
+
+	if (extension != null) {
+		right += ' AND ' + extension;
+	} else {
+		if (typeof(right) == "string") {
+			right = "'" + right + "'";
+		}
+	}
 
 	newCondition.left_operator = left;
 	newCondition.operator = operator;
@@ -54,5 +63,6 @@ module.exports = {
 	GreaterOrEqual: GreaterOrEqual,
 	Less: Less,
 	LessOrEqual: LessOrEqual,
-	LIKE: LIKE
+	LIKE: LIKE,
+	BETWEEN: BETWEEN
 }

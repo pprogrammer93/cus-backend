@@ -117,6 +117,7 @@
 		var ids = [];
 
 		$(document).ready(function() {
+			$("#delete-form").attr('action', 'http://<%= domain %>/payment/<%= id %>/delete');
 			load_order();
 		});
 
@@ -125,17 +126,11 @@
 		});
 
 		function submit() {
-			if(ids.length == 0) {
-				$("#submit").prop("disabled", true);
-				return;
-			}
 			$.post("<%= id %>/confirm",
-				{
-					payment_id: ids.pop()
-				},
 				function(result) {
+					console.log(JSON.stringify(result));
 					if(result.error == null) {
-						submit();
+						$("#submit").prop("disabled", true);
 					} else {
 						console.log(result.error);
 					}
@@ -144,25 +139,19 @@
 		}
 
 		function load_order() {
-			$.post("../getHistory", 
-				{
-					user_id: 0,
-					transaction_id: <%= id %>,
-					payment: true
-				}, 
+			$.post("get/<%= id %>", {}, 
 				function(result) {
-					result.result.forEach(function(item, index) {
-						ids.push(item.id);
-						$("#result").append(createFrameOrder(item.name, item.item_quantity, (item.total_price/item.item_quantity), item.total_price));
-						if((index + 1) == result.result.length) {
-							if(item.status == 1 || item.status == 2) {
-								$("#submit").prop("disabled", true);
-								$("#button-delete").prop("disabled", true);
-							} else if (item.status == 3) {
-								$("#submit").prop("disabled", true);
-								$("$submit").html("Expired");
-							}
-						}
+					var status = result.result.status;
+					if(status == 1 || status == 2) {
+						$("#submit").prop("disabled", true);
+						$("#button-delete").prop("disabled", true);
+					} else if (status == 3) {
+						$("#submit").prop("disabled", true);
+						$("#submit").html("Expired");
+					}
+					result.result.item_list.forEach(function(item, index) {
+						ids.push(item.item_id);
+						$("#result").append(createFrameOrder(item.item_name, item.item_quantity, (item.price_total/item.item_quantity), item.price_total));
 					});
 			    }
 			);

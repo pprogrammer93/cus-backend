@@ -47,7 +47,7 @@
 				<h1>CUS</h1>
 			</div>
 			<div style="position: relative; width: 100%; height: 50px;">
-				<form id="input-form" method="POST" action="http://<%= domain %>/toko/<%= toko_id %>/create-item" encType="multipart/form-data">
+				<form id="input-form" method="POST" action="http://<%= domain %>/toko/<%= toko_id %>/item/<%=id%>/edit" encType="multipart/form-data">
 					<div class="card border-info mb-3 text-center">
 					  <img id="image-show" class="card-img" />
 					  <div class="card-body">
@@ -118,12 +118,12 @@
 		$(window).on("resize", image_resize);
 		
 		function load_item() {
-			$.post("../../../getItemList", 
+			$.post("./", 
 				{
 					item_id: <%= id %>,
-					toko_id: <%= toko_id %>
 				}, 
 				function(result) {
+					console.log(result.result.list_items[0]);
 					item_name = result.result.list_items[0].name;
 					$("#name").val(result.result.list_items[0].name);
 					$("#price").val(result.result.list_items[0].price);

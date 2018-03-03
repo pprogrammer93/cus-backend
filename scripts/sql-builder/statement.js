@@ -7,13 +7,18 @@ var statementBuilder = {
 }
 statementBuilder.select = function() {
 	var sql = this.sql;
-	sql.fields.forEach((field, index) => {
-		this.statement += field;
-		if ((index + 1) != sql.fields.length) {
-			this.statement += ",";
-		}
-		this.statement += " ";
-	});
+
+	if (sql.fields == null || sql.fields.length == 0) {
+		this.statement += '* ';
+	} else {
+		sql.fields.forEach((field, index) => {
+			this.statement += field;
+			if ((index + 1) != sql.fields.length) {
+				this.statement += ",";
+			}
+			this.statement += " ";
+		});
+	}
 	this.statement += "FROM " + sql.table;
 
 	if (sql.condition != null) {
@@ -65,7 +70,7 @@ statementBuilder.insert = function() {
 	this.statement += ") ";
 	this.statement += "VALUES(";
 	sql.values.forEach((value, index) => {
-		this.statement += "'" + host.con.escape(value) + "'";
+		this.statement += host.con.escape(value);
 		if ((index + 1) != sql.values.length) {
 			this.statement += ", ";
 		}
@@ -74,9 +79,18 @@ statementBuilder.insert = function() {
 }
 statementBuilder.replace = function() {
 	var sql = this.sql;
-	this.statement += "INTO " + sql.table + " VALUES(";
+	this.statement += "INTO " + sql.table + " ";
+	this.statement += "(";
+	sql.fields.forEach((field, index) => {
+		this.statement += field;
+		if ((index + 1) != sql.fields.length) {
+			this.statement += ", ";
+		}
+	});
+	this.statement += ") ";
+	this.statement += "VALUES(";
 	sql.values.forEach((value, index) => {
-		this.statement += "'" + host.con.escape(value) + "'";
+		this.statement += host.con.escape(value);
 		if ((index + 1) != sql.values.length) {
 			this.statement += ", ";
 		}
@@ -91,7 +105,11 @@ statementBuilder.where = function() {
 statementBuilder.limit = function() {
 	var sql = this.sql;
 	this.statement += " LIMIT ";
-	this.statement += sql.limit.offset + ", " + sql.limit.length;
+	if (sql.limit.offset == null) {
+		this.statement += sql.limit.length;
+	} else {
+		this.statement += sql.limit.offset + ", " + sql.limit.length;
+	}
 }
 statementBuilder.order = function() {
 	var sql = this.sql;

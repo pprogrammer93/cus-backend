@@ -20,10 +20,18 @@ var sql = {
 	}
 sql.changeOperation = function(operation) {
 	this.operation = operation.toUpperCase();
+	return this;
 }
 sql.addFields = function(fields) {
 	if (typeof(fields) == "string") {
-		this.fields.push(fields);
+		if (fields.indexOf(",") > -1) {
+			var arr = fields.split(",");
+			arr.forEach((str, index) => {
+				this.fields.push(str.trim());
+			});
+		} else {
+			this.fields.push(fields);
+		}
 	} else if (fields instanceof Array) {
 		fields.forEach((field, index) => {
 			this.fields.push(field);
@@ -31,6 +39,7 @@ sql.addFields = function(fields) {
 	} else {
 		throw new Error("fields has wrong type " + fields.constructor.name);
 	}
+	return this;
 }
 sql.removeFields = function(fields) {
 	if (typeof(fields) == "string") {
@@ -48,6 +57,7 @@ sql.removeFields = function(fields) {
 	} else {
 		throw new Error("fields has wrong type " + fields.constructor.name);
 	}
+	return this;
 }
 sql.addValues = function(values) {
 	if (typeof(values) == "string") {
@@ -59,6 +69,7 @@ sql.addValues = function(values) {
 	} else {
 		throw new Error("values has wrong type " + values.constructor.name);
 	}
+	return this;
 }
 sql.removeValues = function(values) {
 	if (typeof(values) == "string") {
@@ -70,6 +81,7 @@ sql.removeValues = function(values) {
 	} else {
 		throw new Error("values has wrong type " + values.constructor.name);
 	}
+	return this;
 }
 sql.setCondition = function(left, operator, right) {
 	if (typeof(left) == "object") {
@@ -77,12 +89,27 @@ sql.setCondition = function(left, operator, right) {
 	} else {
 		this.condition = cond.make_cond(left, operator, right);
 	}
+	return this;
+}
+sql.addCondition = function(operator, right) {
+	if (this.condition == null) {
+		this.condition = right;
+	} else {
+		this.condition = cond.make_cond(this.condition, operator, right);
+	}
+	return this;
 }
 sql.setLimit = function(offset, length) {
-	this.limit = {offset: offset, length: length};
+	if (length == null) {
+		this.limit = {offset: null, length: offset};
+	} else {
+		this.limit = {offset: offset, length: length};
+	}
+	return this;
 }
 sql.setOrder = function(field, type) {
 	this.order = {by: field, type: type};
+	return this;
 }
 sql.build = function() {
 	var stmt = stmtBuilder.make_stmt(this);
@@ -126,5 +153,6 @@ module.exports = {
 	GreaterOrEqual: cond.GreaterOrEqual,
 	Less: cond.Less,
 	LessOrEqual: cond.LessOrEqual,
-	LIKE: cond.LIKE
+	LIKE: cond.LIKE,
+	BETWEEN: cond.BETWEEN
 }

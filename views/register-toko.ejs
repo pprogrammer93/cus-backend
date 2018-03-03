@@ -38,7 +38,7 @@
 		  </ol>
 		</nav>
 		<div class="container">
-			<form id="input-form" method="POST" action="http://<%= domain %>/create/toko" encType="multipart/form-data">
+			<form id="input-form" method="POST" action="http://<%= domain %>/toko/create" encType="multipart/form-data">
 				<div class="card border-info mb-3 text-center">
 				  <div class="card-header">
 				    Shop Input Form
@@ -108,6 +108,7 @@
 					</div>
 				  </div>
 				  <div class="card-footer text-muted">
+				  	<button onclick="autofill()" type="button" class="btn btn-secondary">Auto</button>
 				  	<button name="web" type="submit" class="btn btn-primary">Submit</button>
 				  </div>
 				</div>
@@ -181,6 +182,18 @@
 		  </div>
 		</div>
 		<!-- End of Modal -->
+		<script type="text/javascript">
+			function autofill() {
+				$("#name").val("Ganesha Store");
+				$("#address").html("Jl. Ganeca");
+				$("#description").html("Mantab");
+				$("#open_at").val("08:00,08:00,08:00,08:00,08:00,08:00,08:00");
+				$("#close_at").val("23:00,23:00,23:00,23:00,23:00,23:00,23:00");
+				$("#latitude").val("-6.983664");
+				$("#longitude").val("107.623624");
+				$("#phone").val("087722105992");
+			}
+		</script>
 		<script type="text/javascript">
 			var old_time;
 			var time = [];
