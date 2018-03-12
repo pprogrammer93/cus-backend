@@ -86,18 +86,14 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/:user_id/edit", (req,res) => {
-	if(utils.null_check([req.body.user_id])) {
-		res.send({error: {msg: 'lack of parameter'}, result: null});
-		return;
-	}
-	var user_id = req.params.user_id;
-	var query = sql.make_sql(sql.SELECT, 'cus_usere')
+	var userId = req.params.user_id;
+	var query = sql.make_sql(sql.SELECT, 'cus_user')
 		.addFields('name, email, phone, password')
-		.setCondition('user_id', sql.EqualTo, user_id);
+		.setCondition('user_id', sql.EqualTo, userId);
 	host.con.query(query.build(), (err, result) => {
 		if(err) {
 			res.send({error: {msg: 'failed to validate data'}, result: null});
-			logging("SQL_ERR/account/"+user_id+"/edit: " + err.code + " " + query.build());
+			logging("SQL_ERR/account/"+userId+"/edit: " + err.code + " " + query.build());
 			return;
 		}
 		if(result.length == 0) {
@@ -144,18 +140,18 @@ app.post("/:user_id/edit", (req,res) => {
 		var query = sql.make_sql(sql.UPDATE, 'cus_user')
 			.addFields('name, email, phone, password')
 			.addValues([name, email, phone, password])
-			.setCondition('user_id', sql.EqualTo.user_id);
+			.setCondition('user_id', sql.EqualTo, userId);
 		host.con.query(query.build(), (err, result) => {
 			if(err) {
 				res.send({error: {msg: 'failed to update data'}, result: null});
-				logging("SQL_ERR/account/"+user_id+"/edit: " + err.code + " " + query.build());
+				logging("SQL_ERR/account/"+userId+"/edit: " + err.code + " " + query.build());
 			} else {
 				res.send(
 				{
 					error: null, 
 					result: 
 					{
-						id: user_id, 
+						id: userId, 
 						name: name, 
 						email: email, 
 						phone: phone,

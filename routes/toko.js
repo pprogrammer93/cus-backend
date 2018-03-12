@@ -669,7 +669,7 @@ app.post("/:toko_id/item", (req, res) => {
 
 	var query = sql.make_sql(sql.SELECT, 'cus_item');
 	if(itemId != null) {
-		query.addFields('name, price, img_type, description').setCondition('item_id', sql.EqualTo,itemId);
+		query.addFields('item_id, name, price, img_type, description').setCondition('item_id', sql.EqualTo,itemId);
 	} else {
 		query.addFields('item_id, name, price, img_type, description').setCondition('toko_id', sql.EqualTo, tokoId);
 	}
@@ -687,10 +687,10 @@ app.post("/:toko_id/item", (req, res) => {
 	host.con.query(query.build(), (err, list_items) => {
 		if(!err) {
 			list_items.forEach((item, index) => {
-				if (item.item_id == null && item.img_type != null) {
+				if (item.img_type != null) {
 					list_items[index].img_url = utils.build_scheme(
 						'http://dirdomain/direktori/toko/id_name.extension',
-						['http',host.DIR, ITEM_IMAGE_DIR, tokoId, itemId, item.name.replace(/ /g, '_'), item.img_type]
+						['http',host.DIR, ITEM_IMAGE_DIR, tokoId, item.item_id, item.name.replace(/ /g, '_'), item.img_type]
 					);
 				} else {
 					list_items[index].img_url;

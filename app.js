@@ -57,7 +57,7 @@ function init() {
 		} else {
 			host.makeConnection((err, message) => {
 				if (err) {
-					console.log("Error init host!");
+					console.log("Error init host! "  + message);
 				} else {
 					idChecking();
 				}
