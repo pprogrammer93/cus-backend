@@ -280,11 +280,11 @@ app.post("/verify", (req, res) => {
 							{
 								error: null, 
 								result: {
-									id: response_1[0].id, 
+									user_id: response_1[0].user_id, 
 									name: response_1[0].name, 
 									email: req.body.email, 
 									phone: response_1[0].phone,
-									favourite: response_2
+									favourite: result
 								}
 							});
 						resolve(true);

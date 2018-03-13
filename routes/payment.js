@@ -70,7 +70,7 @@ async function getHistory(query, finish){
 		host.con.query(expQuery.build(), (err, result) => {
 			if(err) {
 				logging("SQL_ERR/payment: " + err.code + " " + expQuery.build());
-				reject(null);
+				reject(true);
 			} else {
 				result.forEach((transaction, index) => {
 					eliminateExpiredTransaction(transaction.transaction_id, transaction.estimation);
@@ -86,11 +86,14 @@ async function getHistory(query, finish){
 			if(err) {
 				res.send({error: {msg: 'failed to retrieve data'}, result: null});
 				logging("SQL_ERR/payment/history/"+userId+": " + err.code + " " + query.build());
-				reject(null);
+				reject(true);
+			} else if (result.length == 0) {
+				resolve([]);
 			} else {
 				var itemPromises = [];
 				var tokoPromises = [];
 				result.forEach((transaction, index) => {
+					console.log(index);
 					var date = dateToJSON(transaction.estimation);
 					var history = 
 					{
