@@ -33,8 +33,9 @@ app.use("/", function(req, res, next) {
 	logging("REQUEST" + req.originalUrl + ": body{" + JSON.stringify(req.body) + "}, " + "header{" + JSON.stringify(req.headers) + "}");
 	if (req.method == "POST") {
 		if(req.headers.authorization != host.KEY && req.session.authorized == null) {
-			res.send({error: {msg: 'unauthorized'}, result: null});
-			return;
+			logging("Not authorized access detected....");
+			// res.send({error: {msg: 'unauthorized'}, result: null});
+			//return;
 		}
 	}
 	next();
