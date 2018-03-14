@@ -87,8 +87,8 @@ function timeToJSON(time) {
 }
 
 function isOperationTime(open, close) {
-	if (open == close) {
-		return false;
+	if (open.hours == close.hours && open.minutes == close.minutes) {
+		return true;
 	}
 	date = new Date();
 	h = date.getHours();
@@ -101,9 +101,6 @@ function isOperationTime(open, close) {
 	close_h = close.hours;
 	close_m = close.minutes;
 
-	if (open == close) {
-		return true;
-	}
 	if ((open_h < h || (open_h == h && open_m <= m)) &&
 		(close_h > h || (close_h == h && close_m > m))) {
 		return true;
