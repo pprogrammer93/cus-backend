@@ -38,7 +38,7 @@ var insertGoogleAccount = async function(name, email, phone, password, finish) {
 			finish({
 					error: null, 
 					result: {
-						user_id: result[0].id, 
+						user_id: result[0].user_id, 
 						name: name, 
 						email: email, 
 						phone: phone,
