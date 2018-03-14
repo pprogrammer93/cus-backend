@@ -433,6 +433,7 @@ app.post("/:toko_id/item/create", upload.single("image"), (req, res) => {
 			res.send({error: {msg: 'failed to store data'}, result: null});
 		});
 		if (result == undefined) return;
+		var saveImageResult = true;
 		if(image != null) {
 			var tempImagePath = utils.build_scheme(
 				'direktori/file', 
@@ -443,12 +444,12 @@ app.post("/:toko_id/item/create", upload.single("image"), (req, res) => {
 				[ITEM_IMAGE_DIR, tokoId, result.insertId, name.replace(/ /g, '_'), imageType]
 			);
 			var saveImageResult = await saveImage(tempImagePath, newImagePath);
-			if (saveImageResult) {
-				if (req.session.authorized != undefined) {
-					res.redirect("http://" + host.DOMAIN + "/" + "toko/" + tokoId);
-				} else {
-					res.send({error: null, result: null});
-				}
+		}
+		if (saveImageResult) {
+			if (req.session.authorized != undefined) {
+				res.redirect("http://" + host.DOMAIN + "/" + "toko/" + tokoId);
+			} else {
+				res.send({error: null, result: null});
 			}
 		}
 	};
