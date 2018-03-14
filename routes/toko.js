@@ -684,11 +684,11 @@ app.post("/:toko_id/item", (req, res) => {
 			query.setLimit(limit);
 		}
 	}
-
+	query.setOrder('item_id', sql.DESC);
 	host.con.query(query.build(), (err, list_items) => {
 		if(!err) {
 			list_items.forEach((item, index) => {
-				if (item.img_type != null) {
+				if (item.img_type.length != 0) {
 					list_items[index].img_url = utils.build_scheme(
 						'http://dirdomain/direktori/toko/id_name.extension',
 						['http',host.DIR, ITEM_IMAGE_DIR, tokoId, item.item_id, item.name.replace(/ /g, '_'), item.img_type]
