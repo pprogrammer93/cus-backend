@@ -92,9 +92,10 @@ async function getHistory(query, finish){
 			} else {
 				var itemPromises = [];
 				var tokoPromises = [];
+
 				result.forEach((transaction, index) => {
-					console.log(index);
 					var date = dateToJSON(transaction.estimation);
+					console.log(JSON.stringify(transaction));
 					var history = 
 					{
 						transaction_id: transaction.transaction_id,
@@ -102,7 +103,8 @@ async function getHistory(query, finish){
 						status: transaction.status, 
 						estimation: date.hour + ":" + date.minute,
 						rating: transaction.rating,
-						total_price: transaction.total_price
+						total_price: transaction.total_price,
+						comment: transaction.comment
 					}
 
 					var itemQuery = sql.make_sql(sql.SELECT, 'cus_purchase')
@@ -241,10 +243,14 @@ app.post("/:transaction_id/rate", (req, res) => {
 		return;
 	}
 	var rating = req.body.rating;
+	var comment = req.body.comment;
+
+	console.log(comment);
+
 	var transaction_id = req.params.transaction_id;
 	var query = sql.make_sql(sql.UPDATE, 'cus_transaction')
-		.addFields('status, rating')
-		.addValues([2, rating])
+		.addFields('status, rating, comment')
+		.addValues([2, rating, comment])
 		.setCondition('transaction_id', sql.EqualTo, transaction_id);
 	host.con.query(query.build(), (err, result) => {
 		if(!err) {
