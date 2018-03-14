@@ -101,6 +101,9 @@ function isOperationTime(open, close) {
 	close_h = close.hours;
 	close_m = close.minutes;
 
+	if (open == close) {
+		return true;
+	}
 	if ((open_h < h || (open_h == h && open_m <= m)) &&
 		(close_h > h || (close_h == h && close_m > m))) {
 		return true;
