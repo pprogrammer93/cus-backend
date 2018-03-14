@@ -694,7 +694,7 @@ app.post("/:toko_id/item", (req, res) => {
 						['http',host.DIR, ITEM_IMAGE_DIR, tokoId, item.item_id, item.name.replace(/ /g, '_'), item.img_type]
 					);
 				} else {
-					list_items[index].img_url;
+					list_items[index].img_url = "";
 				}
 			});
 
