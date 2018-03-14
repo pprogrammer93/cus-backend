@@ -245,8 +245,6 @@ app.post("/:transaction_id/rate", (req, res) => {
 	var rating = req.body.rating;
 	var comment = req.body.comment;
 
-	console.log(comment);
-
 	var transaction_id = req.params.transaction_id;
 	var query = sql.make_sql(sql.UPDATE, 'cus_transaction')
 		.addFields('status, rating, comment')
