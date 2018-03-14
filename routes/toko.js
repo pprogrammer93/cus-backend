@@ -291,7 +291,7 @@ app.post("/create", upload.single("image"), (req, res) => {
 					}
 				}
 			} else {
-				if (req.session.authorized != undefined) {
+				if (!(req.session.authorized == undefined)) {
 					res.redirect('http://' + host.DOMAIN);
 				} else {
 					res.send({error: null, result: null});
