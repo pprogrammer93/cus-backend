@@ -213,7 +213,7 @@ app.post("/create", (req, res) => {
 					{
 						error: null, 
 						result: {
-							id: result[0].id, 
+							user_id: result[0].user_id, 
 							name: name, 
 							email: email, 
 							phone: phone,
