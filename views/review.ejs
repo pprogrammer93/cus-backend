@@ -100,8 +100,11 @@
 				  <div class="card-header">
 				  	<%= id %>
 				  </div>
+				  <div id="rate" class="card-body">
+				  </div>
 				  <div id="result" class="card-body">
-				    
+				  </div>
+				  <div id="comment" class="card-body">
 				  </div>
 				  <div class="card-footer text-muted">
 				  	<button id="button-delete" type="button" class="btn btn-danger" data-toggle="modal" data-target="#modal-delete">Hapus</button>
@@ -149,6 +152,8 @@
 						$("#submit").prop("disabled", true);
 						$("#submit").html("Expired");
 					}
+					$("#rate").html("Rating: " + result.result.rating);
+					$("#comment").html("Comment: <br />" + result.result.comment);
 					result.result.item_list.forEach(function(item, index) {
 						ids.push(item.item_id);
 						$("#result").append(createFrameOrder(item.item_name, item.item_quantity, (item.price_total/item.item_quantity), item.price_total));

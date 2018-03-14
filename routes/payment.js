@@ -96,6 +96,7 @@ async function getHistory(query, finish){
 				result.forEach((transaction, index) => {
 					var date = dateToJSON(transaction.estimation);
 					console.log(JSON.stringify(transaction));
+					console.log(transaction.comment);
 					var history = 
 					{
 						transaction_id: transaction.transaction_id,
@@ -197,6 +198,7 @@ app.post('/get/:transaction_id', (req, res) => {
 						status: transaction.status,
 						estimation: transaction.estimation,
 						rating: transaction.rating,
+						comment: transaction.comment,
 						item_list: []
 					};
 					result.forEach((item, index) => {
@@ -218,7 +220,6 @@ app.post("/:transaction_id/confirm", (req, res) => {
 			res.send({error: {msg: 'failed to change data'}, result: null});
 			logging("SQL_ERR/payment/"+transaction_id+"/confirm: " + err.code + " " + query.build());
 		} else {
-			console.log(JSON.stringify(result));
 			res.send({error: null, result: null});
 		}
 	});
