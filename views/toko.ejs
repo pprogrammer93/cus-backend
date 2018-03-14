@@ -417,6 +417,7 @@
 
 		function load_item(p) {
 			$("#result").html("");
+			page = p;
 			var searchKey = $("#search").val();
 			$.post(<%= id %> + "/item",
 				{
@@ -426,13 +427,12 @@
 					limit: (maxItem+1)	
 				},
 				function(result) {
-					console.log(result);
 					result.result.list_items.forEach(function(item, index) {
 						if((index+1) == (maxItem+1)) {
 							set_pagination(false, "load_item");
 						} else {
 							$("#result").append(createFrameItem(item.item_id, item.name, item.description, item.price));
-							if((index+1) == result.result.length) {
+							if((index+1) == result.result.list_items.length) {
 								set_pagination(true, "load_item");
 							}
 						}
