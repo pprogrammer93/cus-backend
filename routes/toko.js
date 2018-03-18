@@ -16,7 +16,7 @@ var sql = require('../scripts/sql-builder/sql-builder');
 
 var getTodayTime = function(time) {
 	t = time.split(",");
-	d = ((new Date()).getDay() - 1) % 7;
+	d = ((((new Date()).getDay() - 1) % 7) + 7) % 7;
 	return t[d];
 }
 
