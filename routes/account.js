@@ -255,7 +255,7 @@ app.post("/verify", (req, res) => {
 		if(response_1.length == 0) {
 			if(loginType == "google") {
 				await insertGoogleAccount(name, email, phone, password, (result) => {
-					res.send({error: null, result: result});
+					res.send(result);
 				});
 			} else {
 				res.send({error: {msg: 'user does not exist'}, result: null});
