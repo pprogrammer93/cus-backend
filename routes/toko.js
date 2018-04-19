@@ -649,7 +649,7 @@ app.post("/explore", (req, res) => {
 				result[index].close_at = closeAt;
 				result[index].img_url = utils.build_scheme(
 					'http://dirdomain/direktori/id_name.extension',
-					['http', host.DIR, TOKO_IMAGE_DIR, toko.toko_id, toko.name, toko.img_type]
+					['http', host.DIR, TOKO_IMAGE_DIR, toko.toko_id, toko.name.replace(/ /g, '_'), toko.img_type]
 				);
 				result[index].is_close = !isOperationTime(timeToJSON(openAt), timeToJSON(closeAt));
 			});
