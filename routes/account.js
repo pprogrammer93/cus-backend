@@ -45,9 +45,10 @@ var insertGoogleAccount = async function(name, email, phone, password, finish) {
 						favourite: []
 					}
 				});
-				resolve(true);
+				resolve(finish);
 		});
 	});
+	return response;
 }
 
 app.post("/", (req, res) => {
